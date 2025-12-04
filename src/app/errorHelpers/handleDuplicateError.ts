@@ -1,0 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { IGenericResponse } from "../interfaces/error.types";
+
+
+export const handleDuplicateError = (err: any): IGenericResponse => {
+    const matchedArray = err.message.match(/"([^"]*)"/);
+    
+    return {
+        statusCode: 400,
+        message: `${matchedArray[1]} already exists!`
+    };
+};
