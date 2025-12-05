@@ -38,10 +38,22 @@ const getSingleItemService = async (itemId: string) => {
     return item;
 };
 
+const getMyItemsService = async (ownerId: string) => {
+    const items = await Items.find({ owner: ownerId });
+    return items;
+};
+
+const removeItemService = async (itemId: string) => {
+    const deletedItem = await Items.findByIdAndDelete(itemId);
+    return deletedItem;
+};
+
 
 export const ItemServices = {
     addItemService,
     editItemService,
     getAllItemsService,
-    getSingleItemService
+    getSingleItemService,
+    getMyItemsService,
+    removeItemService
 };

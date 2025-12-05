@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 
-enum Category {
+export enum Category {
     ELECTRONICS = "ELECTRONICS",
     FURNITURE = "FURNITURE",
     TOOLS = "TOOLS",
