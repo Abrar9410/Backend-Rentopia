@@ -4,7 +4,7 @@ import { Types } from "mongoose";
 export enum ORDER_STATUS {
     // REQUESTED = "REQUESTED",
     PENDING = "PENDING",
-    CANCELED = "CANCELED",
+    CANCELLED = "CANCELLED",
     ONGOING = "ONGOING",
     COMPLETED = "COMPLETED",
     FAILED = "FAILED"
