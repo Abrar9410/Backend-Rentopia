@@ -37,11 +37,10 @@ const updateUserService = async (userId: string, payload: Partial<IUser>, decode
      * email - cannot be updated -> already taken care of using zod schema
      * name, phone, address, password
      * password re-hashing
-     * Only ADMIN & SUPER_ADMIN can update -> role, isDeleted, isActive: BLOCKED
-     * Only SUPER_ADMIN can promote someone to SUPER_ADMIN
+     * Only ADMIN can update -> role, isDeleted, isActive: BLOCKED/INACTIVE, isVerified
      */
 
-    if (decodedToken.role === Role.USER || decodedToken.role === Role.GUIDE) {
+    if (decodedToken.role === Role.USER) {
         if (userId !== decodedToken.userId) {
             throw new AppError(httpStatus.FORBIDDEN, "You are Unauthorized to Update another user's Profile!");
         };
@@ -53,22 +52,22 @@ const updateUserService = async (userId: string, payload: Partial<IUser>, decode
     };
 
 
-    if (user.role === Role.SUPER_ADMIN && decodedToken.role === Role.ADMIN) {
-        throw new AppError(httpStatus.FORBIDDEN, "You are Not Authorized to Update this Profile!");
-    };
+    // if (user.role === Role.SUPER_ADMIN && decodedToken.role === Role.ADMIN) {
+    //     throw new AppError(httpStatus.FORBIDDEN, "You are Not Authorized to Update this Profile!");
+    // };
 
     if (payload.role) {
-        if (decodedToken.role === Role.USER || decodedToken.role === Role.GUIDE) {
+        if (decodedToken.role === Role.USER) {
             throw new AppError(httpStatus.FORBIDDEN, "You are Not authorized to update role!");
         };
 
-        if (payload.role === Role.SUPER_ADMIN && decodedToken.role === Role.ADMIN) {
-            throw new AppError(httpStatus.FORBIDDEN, "You are Not authorized to promote anyone to SUPER_ADMIN!");
-        };
+        // if (payload.role === Role.SUPER_ADMIN && decodedToken.role === Role.ADMIN) {
+        //     throw new AppError(httpStatus.FORBIDDEN, "You are Not authorized to promote anyone to SUPER_ADMIN!");
+        // };
     };
 
     if (payload.isActive || payload.isDeleted || payload.isVerified) {
-        if (decodedToken.role === Role.USER || decodedToken.role === Role.GUIDE) {
+        if (decodedToken.role === Role.USER) {
             throw new AppError(httpStatus.FORBIDDEN, "You are not authorized to update this property(s)!");
         };
     };
