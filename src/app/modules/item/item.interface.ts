@@ -12,6 +12,7 @@ export enum Category {
 
 export enum Availability {
     AVAILABLE = "AVAILABLE",
+    BOOKED = "BOOKED",
     RENTED = "RENTED",
     UNAVAILABLE = "UNAVAILABLE"
 };

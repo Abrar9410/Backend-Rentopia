@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { Availability, Category } from "./item.interface";
 
+
 export const addItemZodSchema = z.object({
     title: z
         .string({ error: "Item name must be string" })
