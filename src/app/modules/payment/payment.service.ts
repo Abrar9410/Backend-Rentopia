@@ -77,6 +77,7 @@ const successPaymentService = async (query: Record<string, string>) => {
                 { new: true, runValidators: true, session }
             )
             .populate("item", "title")
+            .populate("owner", "name email phone address")
             .populate("renter", "name email phone address");
 
         if (!updatedOrder) {
@@ -100,7 +101,8 @@ const successPaymentService = async (query: Record<string, string>) => {
             totalAmount: updatedPayment.amount,
             itemTitle: (updatedOrder.item as unknown as IItem).title,
             transactionId: updatedPayment.transactionId,
-            userName: (updatedOrder.renter as unknown as IUser).name
+            userName: (updatedOrder.renter as unknown as IUser).name,
+            ownerName: updatedUser.name
         };
 
         const pdfBuffer = await generatePdf(invoiceData);
@@ -108,7 +110,7 @@ const successPaymentService = async (query: Record<string, string>) => {
         const cloudinaryResult = await uploadBufferToCloudinary(pdfBuffer, "invoice");
 
         if (!cloudinaryResult) {
-            throw new AppError(httpStatus.CONFLICT, "Error uploading pdf");
+            throw new AppError(httpStatus.CONFLICT, "Error uploading pdf!");
         };
 
         await Payments
@@ -120,6 +122,7 @@ const successPaymentService = async (query: Record<string, string>) => {
 
         await sendEmail({
             to: (updatedOrder.renter as unknown as IUser).email,
+            cc: (updatedOrder.owner as unknown as IUser).email,
             subject: "Your Order Invoice",
             templateName: "invoice",
             templateData: invoiceData,
@@ -212,8 +215,10 @@ const cancelPaymentService = async (query: Record<string, string>) => {
 };
 
 const getInvoiceDownloadUrlService = async (paymentId: string, userId: string) => {
-    // NEXT LINE SHOULD BE CHECKED; SEEMS DOUBTFUL; CAN "populate" BE USED LIKE THIS???
-    const payment = await Payments.findById(paymentId).populate("order", "renter").select("invoiceUrl order");
+    const payment = await Payments.findById(paymentId).populate({
+        path: "order",
+        select: "renter"
+    }).select("invoiceUrl order");
 
     if (!payment) {
         throw new AppError(404, "Payment not found!");

@@ -23,7 +23,10 @@ const addItem = catchAsync(async (req: Request, res: Response) => {
 
 const editItem = catchAsync(async (req: Request, res: Response) => {
     const itemId = req.params.id;
-    const payload = req.body;
+    const payload = {
+        ...req.body,
+        images: (req.files as Express.Multer.File[]).map(file => file.path),
+    };
 
     const updatedItem = await ItemServices.editItemService(itemId, payload);
 

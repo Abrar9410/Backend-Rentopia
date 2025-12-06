@@ -29,4 +29,5 @@ export interface IItem {
     // location: string;
     createdAt?: Date;
     updatedAt?: Date;
+    deleteImages?: string[];
 };

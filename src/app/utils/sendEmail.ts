@@ -17,7 +17,8 @@ const transporter = nodemailer.createTransport({
 });
 
 interface SendEmailOptions {
-    to: string,
+    to: string;
+    cc?: string;
     subject: string;
     templateName: string;
     templateData?: Record<string, any>
@@ -30,6 +31,7 @@ interface SendEmailOptions {
 
 export const sendEmail = async ({
     to,
+    cc,
     subject,
     templateName,
     templateData,
@@ -41,6 +43,7 @@ export const sendEmail = async ({
         const info = await transporter.sendMail({
             from: envVars.EMAIL_SENDER.SMTP_FROM,
             to: to,
+            cc: cc? cc : undefined,
             subject: subject,
             html: html,
             attachments: attachments?.map(attachment => ({

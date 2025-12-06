@@ -8,6 +8,7 @@ export interface IInvoiceData {
     orderDate: Date;
     userName: string;
     itemTitle: string;
+    ownerName: string;
     startDate: Date;
     endDate: Date;
     totalAmount: number;
@@ -30,18 +31,22 @@ export const generatePdf = async (invoiceData: IInvoiceData): Promise<Buffer<Arr
 
             doc.fontSize(14).text(`Transaction ID : ${invoiceData.transactionId}`);
             doc.text(`Booking Date : ${invoiceData.orderDate}`);
-            doc.text(`Customer : ${invoiceData.userName}`);
+            doc.text(`Renter : ${invoiceData.userName}`);
 
             doc.moveDown();
 
             doc.text(`Item: ${invoiceData.itemTitle}`);
             doc.text(`Start-Date: ${invoiceData.startDate}`);
             doc.text(`End-Date: ${invoiceData.endDate}`);
+            doc.text(`Owner: ${invoiceData.ownerName}`);
+
+            doc.moveDown();
+            
             doc.text(`Total Amount: ৳${invoiceData.totalAmount.toFixed(2)}`);
 
             doc.moveDown();
 
-            doc.text("Thank you for USING Rentopia!", { align: "center" });
+            doc.text("Thank you for using Rentopia! Happy Renting!", { align: "center" });
 
             doc.end();
         })
