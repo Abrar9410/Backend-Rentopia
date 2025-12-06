@@ -6,6 +6,8 @@ import { PaymentServices } from "./payment.service";
 import { JwtPayload } from "jsonwebtoken";
 import { SSLServices } from "../sslCommerz/sslCommerz.service";
 
+
+
 const initPayment = catchAsync(async (req: Request, res: Response) => {
     const bookingId = req.params.bookingId;
     const result = await PaymentServices.initPaymentService(bookingId);

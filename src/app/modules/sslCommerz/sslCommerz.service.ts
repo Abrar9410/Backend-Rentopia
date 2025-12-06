@@ -20,15 +20,15 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
             cancel_url: `${envVars.SSL.SSL_CANCEL_BACKEND_URL}?transactionId=${payload.transactionId}&amount=${payload.amount}&status=cancel`,
             ipn_url: envVars.SSL.SSL_IPN_URL,
             shipping_method: "N/A",
-            product_name: "Tour",
+            product_name: "Rental Item",
             product_category: "Service",
             product_profile: "general",
             cus_name: payload.name,
             cus_email: payload.email,
             cus_add1: payload.address,
             cus_add2: "N/A",
-            cus_city: "Dhaka",
-            cus_state: "Dhaka",
+            cus_city: "Chittagong",
+            cus_state: "N/A",
             cus_postcode: "1000",
             cus_country: "Bangladesh",
             cus_phone: payload.phoneNumber,
@@ -50,7 +50,6 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
         })
 
         return response.data;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
         if (envVars.NODE_ENV === "development") {
             console.log("Payment Error Occurred", error);

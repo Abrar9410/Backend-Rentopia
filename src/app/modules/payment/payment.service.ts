@@ -13,6 +13,8 @@ import { IUser } from "../user/user.interface";
 import { sendEmail } from "../../utils/sendEmail";
 import { uploadBufferToCloudinary } from "../../config/cloudinary.config";
 
+
+
 const initPaymentService = async (orderId: string) => {
 
     const payment = await Payments.findOne({ order: orderId });
@@ -46,7 +48,7 @@ const initPaymentService = async (orderId: string) => {
 
 const successPaymentService = async (query: Record<string, string>) => {
 
-    // Update Order Status to COnfirm 
+    // Update Order Status to ONGOING 
     // Update Payment Status to PAID
 
     const session = await Orders.startSession();
@@ -62,20 +64,24 @@ const successPaymentService = async (query: Record<string, string>) => {
         );
 
         if (!updatedPayment) {
-            throw new AppError(401, "Payment Status could Not be Updated!");
+            throw new AppError(httpStatus.EXPECTATION_FAILED, "Payment Status could Not be Updated!");
         };
 
         const updatedOrder = await Orders
             .findByIdAndUpdate(
                 updatedPayment?.order,
-                { status: ORDER_STATUS.COMPLETED },
+                {
+                    status: ORDER_STATUS.COMPLETED,
+                    ownerEarning: updatedPayment.amount * 0.9,
+                    platformFee: updatedPayment.amount * 0.1
+                },
                 { new: true, runValidators: true, session }
             )
             .populate("tour", "title")
             .populate("user", "name email");
 
         if (!updatedOrder) {
-            throw new AppError(401, "Booking Status could Not be Updated!");
+            throw new AppError(httpStatus.EXPECTATION_FAILED, "Order Status could Not be Updated!");
         };
 
         const invoiceData: IInvoiceData = {
@@ -93,7 +99,7 @@ const successPaymentService = async (query: Record<string, string>) => {
         const cloudinaryResult = await uploadBufferToCloudinary(pdfBuffer, "invoice");
 
         if (!cloudinaryResult) {
-            throw new AppError(401, "Error uploading pdf");
+            throw new AppError(httpStatus.CONFLICT, "Error uploading pdf");
         };
 
         await Payments
@@ -119,7 +125,8 @@ const successPaymentService = async (query: Record<string, string>) => {
 
         await session.commitTransaction(); //transaction
         session.endSession();
-        return { success: true, message: "Payment Completed Successfully" };
+
+        return { success: true, message: "Payment Completed Successfully!" };
     } catch (error) {
         await session.abortTransaction(); // rollback
         session.endSession()
@@ -197,7 +204,7 @@ const cancelPaymentService = async (query: Record<string, string>) => {
 
 const getInvoiceDownloadUrlService = async (paymentId: string, userId: string) => {
     // NEXT LINE SHOULD BE CHECKED; SEEMS DOUBTFUL; CAN "populate" BE USED LIKE THIS???
-    const payment = await Payments.findById(paymentId).populate("order", "user").select("invoiceUrl order");
+    const payment = await Payments.findById(paymentId).populate("order", "renter").select("invoiceUrl order");
 
     if (!payment) {
         throw new AppError(404, "Payment not found!");

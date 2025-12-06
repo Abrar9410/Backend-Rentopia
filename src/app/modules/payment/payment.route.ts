@@ -1,10 +1,10 @@
-import express from "express";
+import { Router } from "express";
 import { PaymentControllers } from "./payment.controller";
 import { checkAuth } from "../../middlewares/checkAuth";
 import { Role } from "../user/user.interface";
 
 
-const router = express.Router();
+const router = Router();
 
 
 router.post("/init-payment/:bookingId", PaymentControllers.initPayment);

@@ -36,8 +36,23 @@ const createOrderService = async (payload: Partial<IOrder>, userId: string) => {
             throw new AppError(httpStatus.BAD_REQUEST, "No Price mentioned!");
         };
 
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const amount = Number(item.pricePerDay) * Number(payload.endDate!.getDate() - payload.startDate!.getDate());
+        if (!payload.startDate || !payload.endDate) {
+            throw new AppError(httpStatus.BAD_REQUEST, "Start date and end date are required!");
+        };
+
+        // Extract date-only portion (YYYY-MM-DD)
+        const startDateStr = payload.startDate.toISOString().slice(0, 10);
+        const endDateStr = payload.endDate.toISOString().slice(0, 10);
+
+        if (endDateStr < startDateStr) {
+            throw new AppError(httpStatus.BAD_REQUEST, "End date must be the same or after start date!");
+        };
+
+        // Count days inclusively (same date = 1 day)
+        const startDate = new Date(startDateStr);
+        const endDate = new Date(endDateStr);
+        const totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const amount = Number(item.pricePerDay) * totalDays;
 
         const order = await Orders.create([{
             renter: userId,

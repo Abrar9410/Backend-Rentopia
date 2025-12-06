@@ -19,6 +19,8 @@ export interface IOrder {
     startDate: Date,
     endDate: Date,
     status: ORDER_STATUS,
+    ownerEarning?: number,
+    platformFee?: number,
     createdAt?: Date,
     updatedAt?: Date
 };

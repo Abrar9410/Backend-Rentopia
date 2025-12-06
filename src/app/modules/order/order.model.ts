@@ -34,6 +34,14 @@ const orderSchema = new Schema<IOrder>({
         type: String,
         enum: Object.values(ORDER_STATUS),
         default: ORDER_STATUS.PENDING
+    },
+    ownerEarning: {
+        type: Number,
+        default: 0
+    },
+    platformFee: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true,

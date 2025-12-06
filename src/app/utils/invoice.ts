@@ -37,11 +37,11 @@ export const generatePdf = async (invoiceData: IInvoiceData): Promise<Buffer<Arr
             doc.text(`Item: ${invoiceData.itemTitle}`);
             doc.text(`Start-Date: ${invoiceData.startDate}`);
             doc.text(`End-Date: ${invoiceData.endDate}`);
-            doc.text(`Total Amount: $${invoiceData.totalAmount.toFixed(2)}`);
+            doc.text(`Total Amount: ৳${invoiceData.totalAmount.toFixed(2)}`);
 
             doc.moveDown();
 
-            doc.text("Thank you for booking with us!", { align: "center" });
+            doc.text("Thank you for USING Rentopia!", { align: "center" });
 
             doc.end();
         })
