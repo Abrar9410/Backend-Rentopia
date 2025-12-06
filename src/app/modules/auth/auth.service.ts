@@ -70,18 +70,6 @@ const changePasswordService = async (decodedToken: JwtPayload, oldPassword: stri
         throw new AppError(httpStatus.UNAUTHORIZED, "Old Password Does Not Match!");
     };
 
-    if (newPassword.length < 8) {
-        throw new AppError(httpStatus.LENGTH_REQUIRED, "Password must be at least 8 characters long.")
-    };
-
-    const validPassword = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.*\d)/;
-    if (!validPassword.test(newPassword)) {
-        throw new AppError(
-            httpStatus.NOT_ACCEPTABLE,
-            "Password must contain at least one Uppercase letter, at least one Special Character and at least one Number!"
-        );
-    };
-
     user!.password = await bcryptjs.hash(newPassword, Number(envVars.SALT));
     await user!.save();
 };
@@ -169,18 +157,6 @@ const resetPasswordService = async (decodedToken: JwtPayload, payload: Record<st
 
     if (!user) {
         throw new AppError(httpStatus.NOT_FOUND, "User does not exist!");
-    };
-
-    if (newPassword.length < 8) {
-        throw new AppError(httpStatus.LENGTH_REQUIRED, "Password must be at least 8 characters long.")
-    };
-
-    const validPassword = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.*\d)/;
-    if (!validPassword.test(newPassword)) {
-        throw new AppError(
-            httpStatus.NOT_ACCEPTABLE,
-            "Password must contain at least one Uppercase letter, at least one Special Character and at least one Number!"
-        );
     };
 
     user!.password = await bcryptjs.hash(newPassword, Number(envVars.SALT));
