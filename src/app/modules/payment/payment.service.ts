@@ -12,6 +12,7 @@ import { IItem } from "../item/item.interface";
 import { IUser } from "../user/user.interface";
 import { sendEmail } from "../../utils/sendEmail";
 import { uploadBufferToCloudinary } from "../../config/cloudinary.config";
+import { Users } from "../user/user.model";
 
 
 
@@ -55,8 +56,6 @@ const successPaymentService = async (query: Record<string, string>) => {
     session.startTransaction();
 
     try {
-
-
         const updatedPayment = await Payments.findOneAndUpdate(
             { transactionId: query.transactionId },
             { status: PAYMENT_STATUS.PAID },
@@ -77,11 +76,21 @@ const successPaymentService = async (query: Record<string, string>) => {
                 },
                 { new: true, runValidators: true, session }
             )
-            .populate("tour", "title")
-            .populate("user", "name email");
+            .populate("item", "title")
+            .populate("renter", "name email phone address");
 
         if (!updatedOrder) {
             throw new AppError(httpStatus.EXPECTATION_FAILED, "Order Status could Not be Updated!");
+        };
+
+        const updatedUser = await Users.findByIdAndUpdate(
+            updatedOrder.owner,
+            { $inc: { earnings: updatedPayment.amount * 0.9 } },
+            { new: true, runValidators: true, session }
+        );
+
+        if (!updatedUser) {
+            throw new AppError(httpStatus.EXPECTATION_FAILED, "Owner's Earnings could Not be Updated!");
         };
 
         const invoiceData: IInvoiceData = {

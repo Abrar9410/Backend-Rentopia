@@ -21,7 +21,7 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
             ipn_url: envVars.SSL.SSL_IPN_URL,
             shipping_method: "N/A",
             product_name: "Rental Item",
-            product_category: "Service",
+            product_category: "Product",
             product_profile: "general",
             cus_name: payload.name,
             cus_email: payload.email,
@@ -32,7 +32,7 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
             cus_postcode: "1000",
             cus_country: "Bangladesh",
             cus_phone: payload.phoneNumber,
-            cus_fax: "01711111111",
+            cus_fax: "N/A",
             ship_name: "N/A",
             ship_add1: "N/A",
             ship_add2: "N/A",
@@ -66,7 +66,7 @@ const validatePayment = async (payload: any) => {
         })
 
         if (envVars.NODE_ENV === "development") {
-            console.log("sslcomeerz validate api response", response.data);
+            console.log("sslcommerz validate api response", response.data);
         };
 
         await Payments.updateOne(
@@ -77,7 +77,7 @@ const validatePayment = async (payload: any) => {
         if (envVars.NODE_ENV === "development") {
             console.log(error);
         };
-        throw new AppError(401, `Payment Validation Error, ${error.message}`);
+        throw new AppError(httpStatus.EXPECTATION_FAILED, `Payment Validation Error, ${error.message}`);
     }
 };
 

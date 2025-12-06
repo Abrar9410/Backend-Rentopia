@@ -22,6 +22,7 @@ const userSchema = new Schema<IUser>({
     phone: {type: String, required: true},
     picture: {type: String},
     address: {type: String, required: true},
+    earnings: {type: Number, default: 0},
     isDeleted: {type: Boolean, default: false},
     isActive: {
         type: String,

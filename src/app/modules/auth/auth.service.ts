@@ -74,8 +74,8 @@ const changePasswordService = async (decodedToken: JwtPayload, oldPassword: stri
         throw new AppError(httpStatus.LENGTH_REQUIRED, "Password must be at least 8 characters long.")
     };
 
-    const oneUppercaseLetter = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.*\d)/;
-    if (!oneUppercaseLetter.test(newPassword)) {
+    const validPassword = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.*\d)/;
+    if (!validPassword.test(newPassword)) {
         throw new AppError(
             httpStatus.NOT_ACCEPTABLE,
             "Password must contain at least one Uppercase letter, at least one Special Character and at least one Number!"
@@ -155,10 +155,6 @@ const forgotPasswordService = async (email: string) => {
             resetUILink
         }
     });
-
-    /**
-     * http://localhost:5173/reset-password?id=687f310c724151eb2fcf0c41&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODdmMzEwYzcyNDE1MWViMmZjZjBjNDEiLCJlbWFpbCI6InNhbWluaXNyYXI2QGdtYWlsLmNvbSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzUzMTY2MTM3LCJleHAiOjE3NTMxNjY3Mzd9.LQgXBmyBpEPpAQyPjDNPL4m2xLF4XomfUPfoxeG0MKg
-     */
 };
 
 const resetPasswordService = async (decodedToken: JwtPayload, payload: Record<string, any>) => {
@@ -166,21 +162,21 @@ const resetPasswordService = async (decodedToken: JwtPayload, payload: Record<st
     const { id, newPassword } = payload;
 
     if (id != decodedToken.userId) {
-        throw new AppError(401, "You can not reset your password");
+        throw new AppError(httpStatus.FORBIDDEN, "You can not reset password for another user!");
     };
     
     const user = await Users.findById(decodedToken.userId);
 
     if (!user) {
-        throw new AppError(httpStatus.NOT_FOUND, "User does not exist");
+        throw new AppError(httpStatus.NOT_FOUND, "User does not exist!");
     };
 
     if (newPassword.length < 8) {
         throw new AppError(httpStatus.LENGTH_REQUIRED, "Password must be at least 8 characters long.")
     };
 
-    const oneUppercaseLetter = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.*\d)/;
-    if (!oneUppercaseLetter.test(newPassword)) {
+    const validPassword = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.*\d)/;
+    if (!validPassword.test(newPassword)) {
         throw new AppError(
             httpStatus.NOT_ACCEPTABLE,
             "Password must contain at least one Uppercase letter, at least one Special Character and at least one Number!"

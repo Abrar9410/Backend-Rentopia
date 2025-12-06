@@ -125,15 +125,18 @@ const setPassword = catchAsync(async (req: Request, res: Response, next: NextFun
 });
 
 const forgotPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-
     const { email } = req.body;
+
+    if (!email) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Email is required to send password reset link!");
+    };
 
     await AuthServices.forgotPasswordService(email);
 
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
-        message: "Email Sent Successfully",
+        message: "Email Sent Successfully! Please check your inbox to reset your password.",
         data: null,
     });
 });

@@ -10,6 +10,8 @@ import { Users } from "../user/user.model";
 import { ORDER_STATUS, IOrder } from "./order.interface";
 import { Orders } from "./order.model";
 import { getTransactionId } from "../../utils/getTransactionId";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { orderSearchableFields } from "./order.constant";
 
 
 
@@ -113,9 +115,23 @@ const createOrderService = async (payload: Partial<IOrder>, userId: string) => {
 
 // Frontend(localhost:5173) - User - Tour - Booking (Pending) - Payment(Unpaid) -> SSLCommerz Page -> Payment Fail / Cancel -> Backend(localhost:5000) -> Update Payment(FAIL / CANCEL) & Booking(FAIL / CANCEL) -> redirect to frontend -> Frontend(localhost:5173/payment/cancel or localhost:5173/payment/fail)
 
-const getUserOrdersService = async () => {
+const getUserOrdersService = async (userId: string, query: Record<string, string>) => {
+    const queryBuilder = new QueryBuilder(Orders.find({renter: userId}), query)
+        .filter()
+        .search(orderSearchableFields)
+        .sort()
+        .fields()
+        .paginate();
 
-    return {}
+    const [data, meta] = await Promise.all([
+        queryBuilder.build(),
+        queryBuilder.getMeta()
+    ]);
+
+    return {
+        data,
+        meta
+    };
 };
 
 const getOrderByIdService = async (id: string) => {
@@ -129,9 +145,23 @@ const updateOrderStatusService = async () => {
     return {}
 };
 
-const getAllOrdersService = async () => {
+const getAllOrdersService = async (query: Record<string, string>) => {
+    const queryBuilder = new QueryBuilder(Orders.find(), query)
+        .filter()
+        .search(orderSearchableFields)
+        .sort()
+        .fields()
+        .paginate();
 
-    return {}
+    const [data, meta] = await Promise.all([
+        queryBuilder.build(),
+        queryBuilder.getMeta()
+    ]);
+
+    return {
+        data,
+        meta
+    };
 };
 
 export const OrderServices = {

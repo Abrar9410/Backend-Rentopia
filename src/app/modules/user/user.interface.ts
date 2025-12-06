@@ -24,10 +24,12 @@ export interface IUser {
     phone: string;
     picture?: string;
     address: string;
+    earnings?: number;
     isDeleted?: boolean;
     isActive?: IsActive;
     isVerified?: boolean;
     role: Role;
     auths: IAuthProvider[];
     createdAt?: Date;
+    updatedAt?: Date;
 };
