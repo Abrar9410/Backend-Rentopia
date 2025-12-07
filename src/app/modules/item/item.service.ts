@@ -1,3 +1,4 @@
+import { JwtPayload } from "jsonwebtoken";
 import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
 import AppError from "../../errorHelpers/AppError";
 import { QueryBuilder } from "../../utils/QueryBuilder";
@@ -5,6 +6,7 @@ import { itemSearchableFields } from "./item.constant";
 import { IItem } from "./item.interface";
 import { Items } from "./item.model";
 import httpStatus from "http-status-codes";
+import { Role } from "../user/user.interface";
 
 
 
@@ -63,8 +65,48 @@ const getAllItemsService = async (query: Record<string, string>) => {
     };
 };
 
-const getSingleItemService = async (itemId: string) => {
+const getAllAvailableItemsService = async (query: Record<string, string>) => {
+    const queryBuilder = new QueryBuilder(Items.find({available: true}), query)
+        .filter()
+        .search(itemSearchableFields)
+        .sort()
+        .fields()
+        .paginate();
+
+    const [data, meta] = await Promise.all([
+        queryBuilder.build(),
+        queryBuilder.getMeta()
+    ]);
+
+    return {
+        data,
+        meta
+    };
+};
+
+const getSingleItemService = async (decodedToken: JwtPayload, itemId: string) => {
     const item = await Items.findById(itemId);
+
+    if (!item) {
+        throw new AppError(httpStatus.NOT_FOUND, "This Item is Not Available!");
+    };
+
+    if(item.owner.toString() !== decodedToken.userId){
+        if (decodedToken.role !== Role.ADMIN) {
+            throw new AppError(httpStatus.FORBIDDEN, "You are not authorized to access this item!");
+        }
+    };
+
+    return item;
+};
+
+const getSingleAvailableItemService = async (itemId: string) => {
+    const item = await Items.findById(itemId);
+
+    if (!item || !item.available) {
+        throw new AppError(httpStatus.NOT_FOUND, "This Item is Not Available!");
+    };
+
     return item;
 };
 
@@ -92,7 +134,9 @@ export const ItemServices = {
     addItemService,
     editItemService,
     getAllItemsService,
+    getAllAvailableItemsService,
     getSingleItemService,
+    getSingleAvailableItemService,
     getMyItemsService,
     removeItemService
 };

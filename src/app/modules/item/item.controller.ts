@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import catchAsync from "../../utils/catchAsync";
 import { ItemServices } from "./item.service";
 import { sendResponse } from "../../utils/sendResponse";
+import { JwtPayload } from "jsonwebtoken";
 
 
 const addItem = catchAsync(async (req: Request, res: Response) => {
@@ -52,10 +53,38 @@ const getAllItems = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getAllAvailableItems = catchAsync(async (req: Request, res: Response) => {
+    const query = req.query;
+
+    const result = await ItemServices.getAllItemsService(query as Record<string, string>);
+
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "All Available Items retrieved successfully!",
+        data: result.data,
+        meta: result.meta
+    });
+});
+
 const getSingleItem = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user as JwtPayload;
     const itemId = req.params.id;
 
-    const item = await ItemServices.getSingleItemService(itemId);
+    const item = await ItemServices.getSingleItemService(decodedToken ,itemId);
+
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Item retrieved successfully!",
+        data: item
+    });
+});
+
+const getSingleAvailableItem = catchAsync(async (req: Request, res: Response) => {
+    const itemId = req.params.id;
+
+    const item = await ItemServices.getSingleAvailableItemService(itemId);
 
     sendResponse(res, {
         statusCode: 200,
@@ -97,7 +126,9 @@ export const ItemControllers = {
     addItem,
     editItem,
     getAllItems,
+    getAllAvailableItems,
     getSingleItem,
+    getSingleAvailableItem,
     getMyItems,
     removeItem
 };

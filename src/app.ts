@@ -7,6 +7,8 @@ import { globalErrorHandler } from "./app/middlewares/globalErrorHandler";
 import notFound from "./app/middlewares/notFound";
 import { envVars } from "./app/config/env";
 import expressSession from "express-session";
+import cron from 'node-cron';
+import { OrderServices } from "./app/modules/order/order.service";
 
 
 const app = express();
@@ -25,6 +27,16 @@ app.use(expressSession({
     resave: false,
     saveUninitialized: false
 }));
+
+cron.schedule('* * * * *', async () => {
+    try {
+        await OrderServices.deleteUnpaidOrdersService();
+    } catch (error) {
+        if (envVars.NODE_ENV === "development") {
+            console.log((error as Error).message);
+        };
+    };
+});
 
 app.use("/api", router);
 

@@ -10,11 +10,14 @@ export enum Category {
     OTHERS = "OTHERS"
 };
 
-export enum Availability {
+export enum Current_Status {
     AVAILABLE = "AVAILABLE",
-    BOOKED = "BOOKED",
-    RENTED = "RENTED",
-    UNAVAILABLE = "UNAVAILABLE"
+    OCCUPIED = "OCCUPIED"
+};
+
+export interface Adv_Booking {
+    startDate: Date;
+    endDate: Date;
 };
 
 export interface IItem {
@@ -22,11 +25,13 @@ export interface IItem {
     title: string;
     description: string;
     category: Category;
-    pricePerDay: number;
-    availability: Availability;
-    owner: Types.ObjectId;
     images: string[];
-    // location: string;
+    pricePerDay: number;
+    available: boolean;
+    current_status: Current_Status;
+    owner: Types.ObjectId;
+    location: string;
+    adv_bookings: Adv_Booking[] | [];
     createdAt?: Date;
     updatedAt?: Date;
     deleteImages?: string[];
