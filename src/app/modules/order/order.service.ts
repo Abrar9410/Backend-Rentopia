@@ -13,6 +13,9 @@ import { getTransactionId } from "../../utils/getTransactionId";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { orderSearchableFields } from "./order.constant";
 import { Current_Status } from "../item/item.interface";
+import { JwtPayload } from "jsonwebtoken";
+import { Role } from "../user/user.interface";
+import { differenceInCalendarDays, endOfDay, isAfter, isBefore, isSameDay, isToday, parseISO, startOfDay } from "date-fns";
 
 
 
@@ -39,50 +42,58 @@ const createOrderService = async (payload: Partial<IOrder>, userId: string) => {
             throw new AppError(httpStatus.BAD_REQUEST, "You cannot rent your own item!");
         };
 
-        if (item.current_status !== Current_Status.AVAILABLE) {
-            throw new AppError(httpStatus.NOT_ACCEPTABLE, "Item is currently not available for rent!");
-        };
-
+        
         if (!item?.pricePerDay) {
             throw new AppError(httpStatus.BAD_REQUEST, "No Price mentioned!");
         };
-
+        
         if (!payload.startDate || !payload.endDate) {
-            throw new AppError(httpStatus.BAD_REQUEST, "Start date and end date are required!");
+            throw new AppError(httpStatus.BAD_REQUEST, "Start-date and End-date are required!");
         };
 
-        // Extract date-only portion (YYYY-MM-DD)
-        const startDateStr = payload.startDate.toISOString().slice(0, 10);
-        const endDateStr = payload.endDate.toISOString().slice(0, 10);
+        const { startDate: payloadStartDate, endDate: payloadEndDate } = payload;
+        const startDate = startOfDay(parseISO(payloadStartDate as string));
+        const endDate = endOfDay(parseISO(payloadEndDate as string));
+        
+        if (
+            item.current_status !== Current_Status.AVAILABLE && 
+            isToday(startDate)
+        ) {
+            throw new AppError(httpStatus.NOT_ACCEPTABLE, "Item is currently not available for rent!");
+        };
 
-        item.adv_bookings.forEach(booking => {
-            const bookedStartDateStr = booking.startDate.toISOString().slice(0, 10);
-            const bookedEndDateStr = booking.endDate.toISOString().slice(0, 10);
-
-            if (
-                (startDateStr >= bookedStartDateStr && startDateStr <= bookedEndDateStr) ||
-                (endDateStr >= bookedStartDateStr && endDateStr <= bookedEndDateStr) ||
-                (startDateStr <= bookedStartDateStr && endDateStr >= bookedEndDateStr)
-            ) {
-                throw new AppError(httpStatus.CONFLICT, `Item is already booked from ${bookedStartDateStr} to ${bookedEndDateStr}. Please choose different dates.`);
-            };
-        });
-
-        if (endDateStr < startDateStr) {
+        if (isBefore(endDate, startDate)) {
             throw new AppError(httpStatus.BAD_REQUEST, "End date must be the same or after start date!");
         };
 
+        item.adv_bookings.forEach(booking => {
+            const bookedStart = startOfDay(parseISO(booking.startDate as string));
+            const bookedEnd = endOfDay(parseISO(booking.endDate as string));
+
+            const isOverlap = !isBefore(endDate, bookedStart) && !isAfter(startDate, bookedEnd);
+
+            if (isOverlap) {
+                throw new AppError(
+                    httpStatus.CONFLICT,
+                    `Item is already booked from ${booking.startDate} to ${booking.endDate}. Please choose different dates.`
+                );
+            }
+        });
+
+
         // Count days inclusively (same date = 1 day)
-        const startDate = new Date(startDateStr);
-        const endDate = new Date(endDateStr);
-        const totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const totalDays = differenceInCalendarDays(endDate, startDate) + 1;
+
+        // Total amount
         const amount = Number(item.pricePerDay) * totalDays;
 
         const order = await Orders.create([{
             renter: userId,
+            item: item._id,
             owner: item?.owner,
             status: ORDER_STATUS.PENDING,
-            ...payload
+            startDate,
+            endDate,
         }], { session });
 
         const payment = await Payments.create([{
@@ -150,36 +161,6 @@ const createOrderService = async (payload: Partial<IOrder>, userId: string) => {
 
 // Frontend(localhost:5173) - User - Item - Order (Pending) - Payment(Unpaid) -> SSLCommerz Page -> Payment Fail / Cancel -> Backend(localhost:5000) -> Update Payment(FAIL / CANCEL) & Booking(FAIL / CANCEL) -> redirect to frontend -> Frontend(localhost:5173/payment/cancel or localhost:5173/payment/fail)
 
-const getUserOrdersService = async (userId: string, query: Record<string, string>) => {
-    const queryBuilder = new QueryBuilder(Orders.find({renter: userId}), query)
-        .filter()
-        .search(orderSearchableFields)
-        .sort()
-        .fields()
-        .paginate();
-
-    const [data, meta] = await Promise.all([
-        queryBuilder.build(),
-        queryBuilder.getMeta()
-    ]);
-
-    return {
-        data,
-        meta
-    };
-};
-
-const getOrderByIdService = async (id: string) => {
-    const order = await Orders.findById(id);
-
-    return order;
-};
-
-const updateOrderStatusService = async () => {
-
-    return {}
-};
-
 const getAllOrdersService = async (query: Record<string, string>) => {
     const queryBuilder = new QueryBuilder(Orders.find(), query)
         .filter()
@@ -189,7 +170,7 @@ const getAllOrdersService = async (query: Record<string, string>) => {
         .paginate();
 
     const [data, meta] = await Promise.all([
-        queryBuilder.build(),
+        queryBuilder.build().populate("item").populate("payment").populate("owner", "name email phone address").populate("renter", "name email phone address"),
         queryBuilder.getMeta()
     ]);
 
@@ -197,6 +178,61 @@ const getAllOrdersService = async (query: Record<string, string>) => {
         data,
         meta
     };
+};
+
+const getUserOrdersService = async (userId: string, query: Record<string, string>) => {
+    const queryBuilder = new QueryBuilder(Orders.find({$or: [{renter: userId}, {owner: userId}]}), query)
+        .filter()
+        .search(orderSearchableFields)
+        .sort()
+        .fields()
+        .paginate();
+
+    const [data, meta] = await Promise.all([
+        queryBuilder.build().populate("item").populate("payment").populate("owner", "name").populate("renter", "name"),
+        queryBuilder.getMeta()
+    ]);
+
+    return {
+        data,
+        meta
+    };
+};
+
+const getOrderByIdService = async (decodedToken: JwtPayload, orderId: string) => {
+    const user = await Users.findById(decodedToken.userId);
+    if (!user) {
+        throw new AppError(httpStatus.UNAUTHORIZED, "User not found!");
+    };
+    
+    const order = await Orders.findById(orderId);
+    if (!order) {
+        throw new AppError(httpStatus.NOT_FOUND, "Order not found!");
+    };
+
+    if (
+        order.renter.toString() !== decodedToken.userId &&
+        order.owner.toString() !== decodedToken.userId &&
+        user.role !== Role.ADMIN
+    ) {
+        throw new AppError(httpStatus.FORBIDDEN, "You are not authorized to view this order!");
+    };
+
+    return order;
+};
+
+const updateOrderStatusService = async (id: string, payload: {status: ORDER_STATUS}) => {
+    const updatedOrder = await Orders.findByIdAndUpdate(
+        id,
+        { status: payload.status },
+        { new: true, runValidators: true }
+    );
+
+    if (!updatedOrder) {
+        throw new AppError(httpStatus.NOT_FOUND, "Order not found!");
+    }
+
+    return updatedOrder;
 };
 
 const deleteUnpaidOrdersService = async () => {
@@ -223,18 +259,20 @@ const deleteUnpaidOrdersService = async () => {
             status: ORDER_STATUS.PENDING
         }).session(session);
 
-        unpaidOrders.forEach(async (order) => {
+        for (const order of unpaidOrders) {
             const item = await Items.findById(order.item).session(session);
+
             if (item) {
-                item.adv_bookings = item.adv_bookings.filter(booking =>
-                    !(
-                        booking.startDate.getTime() === order.startDate.getTime() &&
-                        booking.endDate.getTime() === order.endDate.getTime()
-                    )
-                );
+                item.adv_bookings = item.adv_bookings.filter(booking => {
+                    return !(
+                        isSameDay(booking.startDate, order.startDate) &&
+                        isSameDay(booking.endDate, order.endDate)
+                    );
+                });
+
                 await item.save({ session });
-            };
-        });
+            }
+        };
 
         await session.commitTransaction(); //transaction
         session.endSession();
@@ -249,9 +287,9 @@ const deleteUnpaidOrdersService = async () => {
 
 export const OrderServices = {
     createOrderService,
+    getAllOrdersService,
     getUserOrdersService,
     getOrderByIdService,
     updateOrderStatusService,
-    getAllOrdersService,
     deleteUnpaidOrdersService
 };

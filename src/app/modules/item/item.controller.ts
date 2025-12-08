@@ -23,13 +23,14 @@ const addItem = catchAsync(async (req: Request, res: Response) => {
 });
 
 const editItem = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user as JwtPayload;
     const itemId = req.params.id;
     const payload = {
         ...req.body,
         images: (req.files as Express.Multer.File[]).map(file => file.path),
     };
 
-    const updatedItem = await ItemServices.editItemService(itemId, payload);
+    const updatedItem = await ItemServices.editItemService(itemId, decodedToken.userId, payload);
 
     sendResponse(res, {
         statusCode: 200,
@@ -107,6 +108,34 @@ const getMyItems = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const editItemStatus = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user as JwtPayload;
+    const itemId = req.params.id;
+    const { current_status } = req.body;
+
+    const updatedItem = await ItemServices.editItemStatusService(decodedToken, itemId, { current_status });
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Item status updated successfully!",
+        data: updatedItem
+    });
+});
+
+const editItemAvailability = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user as JwtPayload;
+    const itemId = req.params.id;
+    const { available } = req.body;
+
+    const updatedItem = await ItemServices.editItemAvailabilityService(decodedToken.userId, itemId, { available });
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Item status updated successfully!",
+        data: updatedItem
+    });
+});
+
 const removeItem = catchAsync(async (req: Request, res: Response) => {
     const itemId = req.params.id;
     
@@ -130,5 +159,7 @@ export const ItemControllers = {
     getSingleItem,
     getSingleAvailableItem,
     getMyItems,
+    editItemStatus,
+    editItemAvailability,
     removeItem
 };

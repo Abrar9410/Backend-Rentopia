@@ -30,10 +30,10 @@ const getUserOrders = catchAsync(async (req: Request, res: Response) => {
     }
 );
 
-const getSingleOrder = catchAsync(
-    async (req: Request, res: Response) => {
+const getSingleOrder = catchAsync(async (req: Request, res: Response) => {
+        const decodedToken = req.user as JwtPayload;
         const orderId = req.params.orderId;
-        const order = await OrderServices.getOrderByIdService(orderId);
+        const order = await OrderServices.getOrderByIdService(decodedToken, orderId);
         sendResponse(res, {
             statusCode: 200,
             success: true,
@@ -56,16 +56,14 @@ const getAllOrders = catchAsync(async (req: Request, res: Response) => {
     }
 );
 
-const updateOrderStatus = catchAsync(
-    async (req: Request, res: Response) => {
-
-        const updated = await OrderServices.updateOrderStatusService(
-        );
+const updateOrderStatus = catchAsync(async (req: Request, res: Response) => {
+        const updatedOrder = await OrderServices.updateOrderStatusService(req.params.orderId, req.body);
+        
         sendResponse(res, {
             statusCode: 200,
             success: true,
             message: "Order Status Updated Successfully!",
-            data: updated,
+            data: updatedOrder,
         });
     }
 );

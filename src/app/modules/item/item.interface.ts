@@ -12,12 +12,15 @@ export enum Category {
 
 export enum Current_Status {
     AVAILABLE = "AVAILABLE",
-    OCCUPIED = "OCCUPIED"
+    OCCUPIED = "OCCUPIED",
+    UNDER_MAINTENANCE = "UNDER_MAINTENANCE",
+    FLAGGED = "FLAGGED",
+    BLOCKED = "BLOCKED"
 };
 
 export interface Adv_Booking {
-    startDate: Date;
-    endDate: Date;
+    startDate: Date | string;
+    endDate: Date | string;
 };
 
 export interface IItem {

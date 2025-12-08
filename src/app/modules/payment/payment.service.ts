@@ -70,7 +70,7 @@ const successPaymentService = async (query: Record<string, string>) => {
             .findByIdAndUpdate(
                 updatedPayment?.order,
                 {
-                    status: ORDER_STATUS.COMPLETED,
+                    status: ORDER_STATUS.CONFIRMED,
                     ownerEarning: updatedPayment.amount * 0.9,
                     platformFee: updatedPayment.amount * 0.1
                 },

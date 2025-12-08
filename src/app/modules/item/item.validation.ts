@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Availability, Category } from "./item.interface";
+import { Category, Current_Status } from "./item.interface";
 
 
 export const addItemZodSchema = z.object({
@@ -14,8 +14,11 @@ export const addItemZodSchema = z.object({
     pricePerDay: z
         .number({ error: "Price must be number" })
         .positive("Price must be greater than 0"),
-    availability: z
-        .enum(Object.values(Availability) as [string], { error: "Invalid availability status" })
+    available: z
+        .boolean({ error: "The property 'Available' must be boolean" })
+        .optional(),
+    current_status: z
+        .enum(Object.values(Current_Status) as [string], { error: "Invalid Current-Status!" })
         .optional(),
 });
 
@@ -35,7 +38,18 @@ export const editItemZodSchema = z.object({
         .number({ error: "Price must be number" })
         .positive("Price must be greater than 0")
         .optional(),
-    availability: z
-        .enum(Object.values(Availability) as [string], { error: "Invalid availability status" })
+    available: z
+        .boolean({ error: "The property 'Available' must be boolean" })
         .optional(),
+    current_status: z
+        .enum(Object.values(Current_Status) as [string], { error: "Invalid Current-Status!" })
+        .optional(),
+});
+
+export const editItemStatusZodSchema = z.object({
+    current_status: z.enum(Object.values(Current_Status) as [string], { error: "Invalid Current-Status!" }),
+});
+
+export const editItemAvailabilityZodSchema = z.object({
+    available: z.boolean({ error: "The property 'Available' must be boolean" }),
 });
