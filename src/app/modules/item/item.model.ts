@@ -14,6 +14,10 @@ const itemSchema = new Schema<IItem>(
             type: String,
             required: true,
         },
+        specifications: {
+            type: [String],
+            default: []
+        },
         category: {
             type: String,
             required: true,

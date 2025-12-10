@@ -7,6 +7,7 @@ import { envVars } from "../../config/env";
 import { JwtPayload } from "jsonwebtoken";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { userSearchableFields } from "./user.constant";
+import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
 
 
 const createUserService = async (payload: Partial<IUser>) => {
@@ -29,7 +30,10 @@ const createUserService = async (payload: Partial<IUser>) => {
         ...rest
     });
 
-    return newUser;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: pwd, ...createdUser } = newUser.toObject();
+
+    return createdUser;
 };
 
 const updateUserService = async (userId: string, payload: Partial<IUser>, decodedToken: JwtPayload) => {
@@ -76,6 +80,10 @@ const updateUserService = async (userId: string, payload: Partial<IUser>, decode
         throw new AppError(httpStatus.NOT_ACCEPTABLE, "Password Can Not be Updated on this Route! If You Want to Change Your Password then Go to '/reset-password' Route");
     };
 
+    if (payload.picture && user.picture) {
+        await deleteImageFromCLoudinary(user.picture as string);
+    };
+
     const updatedUser = await Users.findByIdAndUpdate(userId, payload, {new: true, runValidators: true});
 
     return updatedUser;
@@ -118,10 +126,19 @@ const getSingleUserService = async (id: string) => {
     };
 };
 
+const deleteUserService = async (userId: string) => {
+    const user = await Users.findByIdAndUpdate(userId, { isDeleted: true }, { new: true });
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, "User Not Found!");
+    };
+    return null;
+};
+
 export const UserServices = {
     createUserService,
     updateUserService,
     getAllUsersService,
     getMeService,
-    getSingleUserService
+    getSingleUserService,
+    deleteUserService
 };

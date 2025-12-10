@@ -26,7 +26,12 @@ import { JwtPayload } from "jsonwebtoken";
 // };
 
 const createUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const user = await UserServices.createUserService(req.body);
+    const payload = {
+        ...req.body,
+        picture: req.file?.path
+    };
+
+    const user = await UserServices.createUserService(payload);
 
     sendResponse(res, {
         success: true,
@@ -88,6 +93,17 @@ const getSingleUser = catchAsync(async (req: Request, res: Response, next: NextF
     })
 });
 
+const deleteUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.id;
+    await UserServices.deleteUserService(userId);
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "User Deleted Successfully!",
+        data: null
+    });
+});
+
 
 
 export const UserControllers = {
@@ -95,5 +111,6 @@ export const UserControllers = {
     updateUser,
     getAllUsers,
     getMe,
-    getSingleUser
+    getSingleUser,
+    deleteUser
 };

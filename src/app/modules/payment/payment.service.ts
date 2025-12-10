@@ -96,8 +96,8 @@ const successPaymentService = async (query: Record<string, string>) => {
 
         const invoiceData: IInvoiceData = {
             orderDate: updatedOrder.createdAt as Date,
-            startDate: updatedOrder.startDate,
-            endDate: updatedOrder.endDate,
+            startDate: updatedOrder.startDate as Date,
+            endDate: updatedOrder.endDate as Date,
             totalAmount: updatedPayment.amount,
             itemTitle: (updatedOrder.item as unknown as IItem).title,
             transactionId: updatedPayment.transactionId,

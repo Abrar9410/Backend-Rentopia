@@ -9,6 +9,11 @@ export const addItemZodSchema = z.object({
     description: z
         .string({ error: "Description must be string" })
         .min(1, "Description is required"),
+    specifications: z
+        .array(z.string({ error: "Each specification must be string" }), {
+            error: "Specifications must be an array of strings"
+        })
+        .optional(),
     category: z
         .enum(Object.values(Category) as [string], { error: "Invalid category" }),
     pricePerDay: z
@@ -31,6 +36,10 @@ export const editItemZodSchema = z.object({
         .string({ error: "Description must be string" })
         .min(1, "Description is required")
         .optional(),
+    specifications: z
+        .array(z.string({ error: "Each specification must be string" }), {
+            error: "Specifications must be an array of strings" })
+        .optional(),
     category: z
         .enum(Object.values(Category) as [string], { error: "Invalid category" })
         .optional(),
@@ -44,6 +53,7 @@ export const editItemZodSchema = z.object({
     current_status: z
         .enum(Object.values(Current_Status) as [string], { error: "Invalid Current-Status!" })
         .optional(),
+    deleteImages: z.array(z.string()).optional()
 });
 
 export const editItemStatusZodSchema = z.object({

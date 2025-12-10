@@ -17,7 +17,7 @@ const storage = new CloudinaryStorage({
 
             const uniqueFileName = Math.random().toString(36).substring(2) + "-" + Date.now() + "-" + fileName;
 
-            return uniqueFileName;
+            return `Rentopia/${uniqueFileName}`;
         }
     }
 });

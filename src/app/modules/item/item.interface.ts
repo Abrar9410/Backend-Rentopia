@@ -27,6 +27,7 @@ export interface IItem {
     _id?: Types.ObjectId;
     title: string;
     description: string;
+    specifications?: string[];
     category: Category;
     images: string[];
     pricePerDay: number;
