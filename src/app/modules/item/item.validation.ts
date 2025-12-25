@@ -16,6 +16,9 @@ export const addItemZodSchema = z.object({
         .optional(),
     category: z
         .enum(Object.values(Category) as [string], { error: "Invalid category" }),
+    location: z
+        .string({ error: "Pick-Up Location must be string"})
+        .min(1, "Location is required!"),
     pricePerDay: z
         .number({ error: "Price must be number" })
         .positive("Price must be greater than 0"),
@@ -42,6 +45,10 @@ export const editItemZodSchema = z.object({
         .optional(),
     category: z
         .enum(Object.values(Category) as [string], { error: "Invalid category" })
+        .optional(),
+    location: z
+        .string({ error: "Pick-Up Location must be string" })
+        .min(1, "Location is required!")
         .optional(),
     pricePerDay: z
         .number({ error: "Price must be number" })

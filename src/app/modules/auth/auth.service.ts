@@ -5,7 +5,7 @@ import AppError from "../../errorHelpers/AppError";
 import { IUser } from "../user/user.interface";
 import httpStatus from "http-status-codes";
 import bcryptjs from "bcryptjs";
-import { createNewTokenWithRefreshToken, createUserTokens } from "../../utils/userTokens";
+import { createNewTokensWithRefreshToken, createUserTokens } from "../../utils/userTokens";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../../config/env";
 import { IAuthProvider, IsActive } from "../user/user.interface";
@@ -47,12 +47,13 @@ const credentialsLoginService = async (payload: Partial<IUser>) => {
     };
 };
 
-const getNewTokenService = async (refreshToken: string) => {
+const getNewTokensService = async (refreshToken: string) => {
     
-    const newToken = await createNewTokenWithRefreshToken(refreshToken);
+    const newTokens = await createNewTokensWithRefreshToken(refreshToken);
 
     return {
-        token: newToken
+        token: newTokens.newToken,
+        refreshToken: newTokens.newRefreshToken
     };
 };
 
@@ -115,11 +116,11 @@ const forgotPasswordService = async (email: string) => {
     // };
 
     if (user.isActive === IsActive.BLOCKED || user.isActive === IsActive.INACTIVE) {
-        throw new AppError(httpStatus.BAD_REQUEST, `User is ${user.isActive}`);
+        throw new AppError(httpStatus.BAD_REQUEST, `User is ${user.isActive}!`);
     };
 
     if (user.isDeleted) {
-        throw new AppError(httpStatus.BAD_REQUEST, "User is deleted");
+        throw new AppError(httpStatus.BAD_REQUEST, "User is deleted!");
     };
 
     const jwtPayload = {
@@ -132,7 +133,7 @@ const forgotPasswordService = async (email: string) => {
         expiresIn: "10m"
     });
 
-    const resetUILink = `${envVars.FRONTEND_URL}/reset-password?id=${user._id}&token=${resetToken}`;
+    const resetUILink = `${envVars.FRONTEND_URL}/reset-password?email=${user.email}&token=${resetToken}`;
 
     sendEmail({
         to: user.email,
@@ -147,9 +148,9 @@ const forgotPasswordService = async (email: string) => {
 
 const resetPasswordService = async (decodedToken: JwtPayload, payload: Record<string, any>) => {
 
-    const { id, newPassword } = payload;
+    const { email, newPassword } = payload;
 
-    if (id != decodedToken.userId) {
+    if (email != decodedToken.email) {
         throw new AppError(httpStatus.FORBIDDEN, "You can not reset password for another user!");
     };
     
@@ -165,7 +166,7 @@ const resetPasswordService = async (decodedToken: JwtPayload, payload: Record<st
 
 export const AuthServices = {
     credentialsLoginService,
-    getNewTokenService,
+    getNewTokensService,
     changePasswordService,
     setPasswordService,
     forgotPasswordService,

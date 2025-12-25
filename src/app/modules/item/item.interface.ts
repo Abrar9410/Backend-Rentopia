@@ -1,13 +1,13 @@
 import { Types } from "mongoose";
 
 export enum Category {
-    ELECTRONICS = "ELECTRONICS",
-    FURNITURE = "FURNITURE",
-    TOOLS = "TOOLS",
-    SPORTS = "SPORTS",
-    HOME_APPLIANCES = "HOME_APPLIANCES",
-    BOOKS = "BOOKS",
-    OTHERS = "OTHERS"
+    ELECTRONICS = "Electronics",
+    FURNITURE = "Furniture",
+    TOOLS = "Tools",
+    SPORTS = "Sports",
+    HOME_APPLIANCES = "Home Appliances",
+    BOOKS = "Books",
+    OTHERS = "Others"
 };
 
 export enum Current_Status {

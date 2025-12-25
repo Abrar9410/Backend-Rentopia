@@ -7,7 +7,7 @@ import AppError from "../errorHelpers/AppError";
 import httpStatus from "http-status-codes";
 
 export const createUserTokens = (user: Partial<IUser>) => {
-    const jwtPayload = { userId: user._id, name: user.name, email: user.email, picture: user.picture };
+    const jwtPayload = { userId: user._id, name: user.name, role: user.role, email: user.email, picture: user.picture };
 
     const token = generateToken(jwtPayload, envVars.JWT_SECRET, envVars.JWT_EXPIRESIN);
 
@@ -19,7 +19,7 @@ export const createUserTokens = (user: Partial<IUser>) => {
     };
 };
 
-export const createNewTokenWithRefreshToken = async (refreshToken: string) => {
+export const createNewTokensWithRefreshToken = async (refreshToken: string) => {
     const verifiedRefreshToken = verifyToken(refreshToken, envVars.REFRESH_JWT_SECRET) as JwtPayload;
 
     const user = await Users.findOne({ email: verifiedRefreshToken.email });
@@ -31,11 +31,13 @@ export const createNewTokenWithRefreshToken = async (refreshToken: string) => {
     const jwtPayload = {
         userId: user._id,
         name: user.name,
+        role: user.role,
         email: user.email,
         picture: user.picture
     };
 
     const newToken = generateToken(jwtPayload, envVars.JWT_SECRET, envVars.JWT_EXPIRESIN);
+    const newRefreshToken = generateToken(jwtPayload, envVars.REFRESH_JWT_SECRET, envVars.REFRESH_JWT_EXPIRESIN);
 
-    return newToken;
+    return {newToken, newRefreshToken};
 };

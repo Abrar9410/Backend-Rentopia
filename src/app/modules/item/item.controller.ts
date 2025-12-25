@@ -6,13 +6,14 @@ import { JwtPayload } from "jsonwebtoken";
 
 
 const addItem = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user as JwtPayload;
     const payload = {
         ...req.body,
         images: (req.files as Express.Multer.File[]).map(file => file.path),
         owner: req.user?.userId
     };
 
-    const newItem = await ItemServices.addItemService(payload);
+    const newItem = await ItemServices.addItemService(decodedToken.userId, payload);
 
     sendResponse(res, {
         statusCode: 201,

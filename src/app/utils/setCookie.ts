@@ -11,7 +11,8 @@ export const setAuthCookie = (res: Response, tokenInfo: AuthTokens) => {
         res.cookie("token", tokenInfo.token, {
             httpOnly: true,
             secure: true,
-            sameSite: "none"
+            sameSite: "none",
+            maxAge: 24 * 60 * 60 * 1000  // 1 day in milliseconds
         });
     };
 
@@ -19,7 +20,8 @@ export const setAuthCookie = (res: Response, tokenInfo: AuthTokens) => {
         res.cookie("refreshToken", tokenInfo.refreshToken, {
             httpOnly: true,
             secure: true,
-            sameSite: "none"
+            sameSite: "none",
+            maxAge: 30 * 24 * 60 * 60 * 1000  // 30 days in milliseconds
         });
     };
 };

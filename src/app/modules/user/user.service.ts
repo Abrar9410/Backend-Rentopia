@@ -113,9 +113,7 @@ const getAllUsersService = async (query: Record<string, string>) => {
 const getMeService = async (userId: string) => {
     const user = await Users.findById(userId).select("-password");
     
-    return {
-        data: user
-    };
+    return user;
 };
 
 const getSingleUserService = async (id: string) => {

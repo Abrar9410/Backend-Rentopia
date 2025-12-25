@@ -24,7 +24,7 @@ export const forgotPasswordZodSchema = z.object({
 });
 
 export const resetPasswordZodSchema = z.object({
-    id: z.string({ error: "ID must be string" }).min(1, "ID is required."),
+    email: z.email("Invalid Email!"),
     newPassword: z
         .string({ error: "Password must be string" })
         .min(8, "Password must be at least 8 characters long.")
@@ -36,5 +36,9 @@ export const resetPasswordZodSchema = z.object({
         })
         .regex(/^(?=.*\d)/, {
             message: "Password must contain at least 1 number.",
-        })
+        }),
+    confirmPassword: z.string("Confirm Password must be string!").min(8, "Passwords did not match!")
+})
+.refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords did not match!"
 });

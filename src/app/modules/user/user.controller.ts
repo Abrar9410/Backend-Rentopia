@@ -77,7 +77,7 @@ const getMe = catchAsync(async (req: Request, res: Response, next: NextFunction)
         success: true,
         statusCode: httpStatus.CREATED,
         message: "Your profile Retrieved Successfully!",
-        data: result.data
+        data: result
     });
 });
 

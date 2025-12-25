@@ -10,8 +10,11 @@ import { Role } from "../user/user.interface";
 
 
 
-const addItemService = async (payload: Partial<IItem>) => {
-    const newItem = await Items.create(payload);
+const addItemService = async (userId: string, payload: Partial<IItem>) => {
+    const newItem = await Items.create({
+        ...payload,
+        owner: userId
+    });
     return newItem;
 };
 

@@ -11,7 +11,7 @@ import { changePasswordZodSchema, forgotPasswordZodSchema, resetPasswordZodSchem
 const router = Router();
 
 router.post("/login", AuthControllers.credentialsLogin);
-router.post("/refresh-token", AuthControllers.getNewToken);
+router.post("/refresh-token", AuthControllers.getNewTokens);
 router.post("/logout", AuthControllers.logout);
 router.post("/change-password", checkAuth(...Object.values(Role)), validateMutationRequest(changePasswordZodSchema), AuthControllers.changePassword);
 router.post("/set-password", checkAuth(...Object.values(Role)), AuthControllers.setPassword);

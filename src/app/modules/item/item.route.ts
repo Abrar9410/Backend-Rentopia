@@ -17,7 +17,7 @@ router.get("/all-items/:id", checkAuth(...Object.values(Role)), ItemControllers.
 router.get("/:id", ItemControllers.getSingleAvailableItem);
 router.patch("/edit-item/:id", checkAuth(...Object.values(Role)), multerUpload.array("files"), validateMutationRequest(editItemZodSchema), ItemControllers.editItem);
 router.patch("/update-status/:id", checkAuth(...Object.values(Role)), validateMutationRequest(editItemStatusZodSchema), ItemControllers.editItemStatus);
-router.patch("/update-availability/:id", checkAuth(...Object.values(Role)), validateMutationRequest(editItemAvailabilityZodSchema), ItemControllers.editItemStatus);
+router.patch("/update-availability/:id", checkAuth(...Object.values(Role)), validateMutationRequest(editItemAvailabilityZodSchema), ItemControllers.editItemAvailability);
 router.delete("/remove-item/:id", checkAuth(...Object.values(Role)), ItemControllers.removeItem);
 
 export const ItemRoutes = router;

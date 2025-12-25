@@ -13,7 +13,7 @@ export const checkAuth = (...authRoles: string[]) => async (req: Request, res: R
 
     try {
         const token = req.headers.authorization || req.cookies.token;
-
+        
         if (!token) {
             throw new AppError(401, "Unauthorized Access!")
         };

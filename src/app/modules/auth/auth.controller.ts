@@ -48,25 +48,25 @@ const credentialsLogin = catchAsync(async (req: Request, res: Response, next: Ne
         success: true,
         statusCode: httpStatus.OK,
         message: "User Logged In Successfully!",
-        data: loginInfo
+        data: loginInfo.user
     });
 });
 
-const getNewToken = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+const getNewTokens = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
         throw new AppError(httpStatus.BAD_REQUEST, "No Refresh Token was received from cookies!")
     };
 
-    const tokenInfo = await AuthServices.getNewTokenService(refreshToken);
+    const tokenInfo = await AuthServices.getNewTokensService(refreshToken);
 
     setAuthCookie(res, tokenInfo);
 
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
-        message: "New Token Received Successfully!",
-        data: tokenInfo
+        message: "New Tokens Received Successfully!",
+        data: null
     });
 });
 
@@ -175,7 +175,7 @@ const resetPassword = catchAsync(async (req: Request, res: Response, next: NextF
 
 export const AuthControllers = {
     credentialsLogin,
-    getNewToken,
+    getNewTokens,
     logout,
     changePassword,
     resetPassword,
