@@ -76,8 +76,8 @@ export class QueryBuilder<T> {
         const page = Number(this.query.page) || 1;
         const limit = Number(this.query.limit) || 10;
 
-        const totalPage = Math.ceil(totalDocuments / limit);
+        const totalPages = Math.ceil(totalDocuments / limit);
 
-        return { page, limit, total: totalDocuments, totalPage };
+        return { page, limit, total: totalDocuments, totalPages };
     };
 };

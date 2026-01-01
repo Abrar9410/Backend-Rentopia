@@ -97,15 +97,17 @@ const getSingleAvailableItem = catchAsync(async (req: Request, res: Response) =>
 });
 
 const getMyItems = catchAsync(async (req: Request, res: Response) => {
+    const query = req.query;
     const ownerId = req.user?.userId as string;
 
-    const items = await ItemServices.getMyItemsService(ownerId);
+    const result = await ItemServices.getMyItemsService(query as Record<string, string>, ownerId);
 
     sendResponse(res, {
         statusCode: 200,
         success: true,
         message: "Your Items retrieved successfully!",
-        data: items
+        data: result.data,
+        meta: result.meta
     });
 });
 

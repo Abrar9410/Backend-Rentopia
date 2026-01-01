@@ -80,8 +80,11 @@ const updateUserService = async (userId: string, payload: Partial<IUser>, decode
         throw new AppError(httpStatus.NOT_ACCEPTABLE, "Password Can Not be Updated on this Route! If You Want to Change Your Password then Go to '/reset-password' Route");
     };
 
-    if (payload.picture && user.picture) {
+    if (payload.deleteImage && payload.deleteImage === user.picture) {
         await deleteImageFromCLoudinary(user.picture as string);
+        if (!payload.picture) {
+            payload.picture = "";
+        };
     };
 
     const updatedUser = await Users.findByIdAndUpdate(userId, payload, {new: true, runValidators: true});

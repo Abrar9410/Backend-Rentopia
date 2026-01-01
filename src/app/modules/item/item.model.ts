@@ -43,7 +43,7 @@ const itemSchema = new Schema<IItem>(
         },
         owner: {
             type: Schema.Types.ObjectId,
-            ref: 'User',
+            ref: 'Users',
             required: true,
         },
         location: {

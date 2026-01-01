@@ -30,7 +30,7 @@ const editItemService = async (itemId: string, userID: string, payload: Partial<
     };
 
     if (payload.images && payload.images.length > 0 && item.images && item.images.length > 0) {
-        payload.images = [...payload.images, ...item.images];
+        payload.images = [...item.images, ...payload.images];
     };
 
     if (payload.deleteImages && payload.deleteImages.length > 0 && item.images && item.images.length > 0) {
@@ -62,7 +62,7 @@ const getAllItemsService = async (query: Record<string, string>) => {
         .paginate();
 
     const [data, meta] = await Promise.all([
-        queryBuilder.build(),
+        queryBuilder.build().populate("owner", "name email picture role"),
         queryBuilder.getMeta()
     ]);
 
@@ -81,7 +81,7 @@ const getAllAvailableItemsService = async (query: Record<string, string>) => {
         .paginate();
 
     const [data, meta] = await Promise.all([
-        queryBuilder.build(),
+        queryBuilder.build().populate("owner", "name email picture role"),
         queryBuilder.getMeta()
     ]);
 
@@ -115,9 +115,23 @@ const getSingleAvailableItemService = async (itemId: string) => {
     return item;
 };
 
-const getMyItemsService = async (ownerId: string) => {
-    const items = await Items.find({ owner: ownerId });
-    return items;
+const getMyItemsService = async (query: Record<string, string>, ownerId: string) => {
+    const queryBuilder = new QueryBuilder(Items.find({ owner: ownerId }), query)
+        .filter()
+        .search(itemSearchableFields)
+        .sort()
+        .fields()
+        .paginate();
+
+    const [data, meta] = await Promise.all([
+        queryBuilder.build().populate("owner", "name picture"),
+        queryBuilder.getMeta()
+    ]);
+
+    return {
+        data,
+        meta
+    };
 };
 
 const editItemStatusService = async (user: JwtPayload, itemId: string, payload: Partial<IItem>) => {
@@ -159,6 +173,19 @@ const editItemAvailabilityService = async (userId: string, itemId: string, paylo
 
     if (item.owner.toString() !== userId) {
         throw new AppError(httpStatus.FORBIDDEN, "You are not authorized to update this item!");
+    };
+
+    if (payload.available === true) {
+        if (
+            item.current_status === Current_Status.UNDER_MAINTENANCE ||
+            item.current_status === Current_Status.FLAGGED ||
+            item.current_status === Current_Status.BLOCKED
+        ) {
+            throw new AppError(
+                httpStatus.FORBIDDEN,
+                `This Item cannot be given on rent as it is currently ${item.current_status}`
+            );
+        };
     };
 
     const updatedItem = await Items.findByIdAndUpdate(itemId, payload, { new: true, runValidators: true });

@@ -5,7 +5,7 @@ import { ZodObject } from "zod";
 
 export const validateMutationRequest = (zodSchema: ZodObject) => async (req: Request, res: Response, next: NextFunction) => {
     try {
-        if (req.body.data) {
+        if (req.body?.data) {
             req.body = JSON.parse(req.body.data);
         };
         

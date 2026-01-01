@@ -73,5 +73,8 @@ export const updateUserZodSchema = z.object({
     address: z
         .string({ error: "Address must be string" })
         .max(200, "Address cannot exceed 200 characters.")
+        .optional(),
+    deleteImage: z
+        .string()
         .optional()
 });

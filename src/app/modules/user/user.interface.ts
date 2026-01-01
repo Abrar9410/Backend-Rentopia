@@ -32,4 +32,5 @@ export interface IUser {
     auths: IAuthProvider[];
     createdAt?: Date;
     updatedAt?: Date;
+    deleteImage?: string;
 };
