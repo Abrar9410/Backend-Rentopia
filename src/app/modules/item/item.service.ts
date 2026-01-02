@@ -10,12 +10,49 @@ import { Role } from "../user/user.interface";
 
 
 
-const addItemService = async (userId: string, payload: Partial<IItem>) => {
+const addItemService = async (decodedToken: JwtPayload, payload: Partial<IItem>) => {
     const newItem = await Items.create({
         ...payload,
-        owner: userId
+        owner: decodedToken.userId,
+        ownerRole: decodedToken.role
     });
+
     return newItem;
+};
+
+const editRentopiaItemService = async (itemId: string, decodedToken: JwtPayload, payload: Partial<IItem>) => {
+    const item = await Items.findById(itemId);
+
+    if (!item) {
+        throw new AppError(httpStatus.NOT_FOUND, "Item not found!");
+    };
+
+    if (item.ownerRole !== decodedToken.role) {
+        throw new AppError(httpStatus.FORBIDDEN, "You are not authorized to edit this item!");
+    };
+
+    if (payload.images && payload.images.length > 0 && item.images && item.images.length > 0) {
+        payload.images = [...item.images, ...payload.images];
+    };
+
+    if (payload.deleteImages && payload.deleteImages.length > 0 && item.images && item.images.length > 0) {
+
+        const restDBImages = item.images.filter(imageUrl => !payload.deleteImages?.includes(imageUrl))
+
+        const updatedPayloadImages = (payload.images || [])
+            .filter(imageUrl => !payload.deleteImages?.includes(imageUrl))
+            .filter(imageUrl => !restDBImages.includes(imageUrl));
+
+        payload.images = [...restDBImages, ...updatedPayloadImages];
+    };
+
+    const updatedItem = await Items.findByIdAndUpdate(itemId, payload, { new: true, runValidators: true });
+
+    if (payload.deleteImages && payload.deleteImages.length > 0 && item.images && item.images.length > 0) {
+        await Promise.all(payload.deleteImages.map(url => deleteImageFromCLoudinary(url)))
+    };
+
+    return updatedItem;
 };
 
 const editItemService = async (itemId: string, userID: string, payload: Partial<IItem>) => {
@@ -115,6 +152,25 @@ const getSingleAvailableItemService = async (itemId: string) => {
     return item;
 };
 
+const getRentopiaItemsService = async (query: Record<string, string>) => {
+    const queryBuilder = new QueryBuilder(Items.find({ ownerRole: Role.ADMIN }), query)
+        .filter()
+        .search(itemSearchableFields)
+        .sort()
+        .fields()
+        .paginate();
+
+    const [data, meta] = await Promise.all([
+        queryBuilder.build().populate("owner", "name email picture"),
+        queryBuilder.getMeta()
+    ]);
+
+    return {
+        data,
+        meta
+    };
+};
+
 const getMyItemsService = async (query: Record<string, string>, ownerId: string) => {
     const queryBuilder = new QueryBuilder(Items.find({ owner: ownerId }), query)
         .filter()
@@ -145,7 +201,14 @@ const editItemStatusService = async (user: JwtPayload, itemId: string, payload: 
         throw new AppError(httpStatus.FORBIDDEN, "You are not authorized to update this item!");
     };
 
-    let updatedItem: IItem | null = null;
+    if (item.current_status === Current_Status.FLAGGED || item.current_status === Current_Status.BLOCKED) {
+        if (user.role !== Role.ADMIN) {
+            throw new AppError(
+                httpStatus.FORBIDDEN,
+                `Sorry, you cannot change Status of a ${item.current_status} item. Please contact us first.`
+            );
+        };
+    };
 
     if (payload.current_status === Current_Status.FLAGGED || payload.current_status === Current_Status.BLOCKED) {
         if (user.role !== Role.ADMIN) {
@@ -159,20 +222,25 @@ const editItemStatusService = async (user: JwtPayload, itemId: string, payload: 
         payload.available = false;
     };
 
-    updatedItem = await Items.findByIdAndUpdate(itemId, payload, { new: true, runValidators: true });
+    const updatedItem = await Items.findByIdAndUpdate(itemId, payload, { new: true, runValidators: true });
 
     return updatedItem;
 };
 
-const editItemAvailabilityService = async (userId: string, itemId: string, payload: {available: boolean}) => {
+const editItemAvailabilityService = async (decodedToken: JwtPayload, itemId: string, payload: {available: boolean}) => {
     const item = await Items.findById(itemId);
 
     if (!item) {
         throw new AppError(httpStatus.NOT_FOUND, "Item not found!");
     };
 
-    if (item.owner.toString() !== userId) {
-        throw new AppError(httpStatus.FORBIDDEN, "You are not authorized to update this item!");
+    if (item.owner.toString() !== decodedToken.userId) {
+        if (item.ownerRole !== Role.ADMIN || decodedToken.role !== Role.ADMIN) {
+            throw new AppError(
+                httpStatus.FORBIDDEN,
+                "Sorry! You cannot enlist or withdraw this item as you are not the owner."
+            );
+        };
     };
 
     if (payload.available === true) {
@@ -210,11 +278,13 @@ const removeItemService = async (itemId: string) => {
 
 export const ItemServices = {
     addItemService,
+    editRentopiaItemService,
     editItemService,
     getAllItemsService,
     getAllAvailableItemsService,
     getSingleItemService,
     getSingleAvailableItemService,
+    getRentopiaItemsService,
     getMyItemsService,
     editItemStatusService,
     editItemAvailabilityService,

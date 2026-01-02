@@ -10,16 +10,33 @@ const addItem = catchAsync(async (req: Request, res: Response) => {
     const payload = {
         ...req.body,
         images: (req.files as Express.Multer.File[]).map(file => file.path),
-        owner: req.user?.userId
     };
 
-    const newItem = await ItemServices.addItemService(decodedToken.userId, payload);
+    const newItem = await ItemServices.addItemService(decodedToken, payload);
 
     sendResponse(res, {
         statusCode: 201,
         success: true,
         message: "Item added successfully!",
         data: newItem
+    });
+});
+
+const editRentopiaItem = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user as JwtPayload;
+    const itemId = req.params.id;
+    const payload = {
+        ...req.body,
+        images: (req.files as Express.Multer.File[]).map(file => file.path),
+    };
+
+    const updatedItem = await ItemServices.editRentopiaItemService(itemId, decodedToken, payload);
+
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Item updated successfully!",
+        data: updatedItem
     });
 });
 
@@ -96,6 +113,20 @@ const getSingleAvailableItem = catchAsync(async (req: Request, res: Response) =>
     });
 });
 
+const getRentopiaItems = catchAsync(async (req: Request, res: Response) => {
+    const query = req.query;
+
+    const result = await ItemServices.getRentopiaItemsService(query as Record<string, string>);
+
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Your Items retrieved successfully!",
+        data: result.data,
+        meta: result.meta
+    });
+});
+
 const getMyItems = catchAsync(async (req: Request, res: Response) => {
     const query = req.query;
     const ownerId = req.user?.userId as string;
@@ -130,7 +161,7 @@ const editItemAvailability = catchAsync(async (req: Request, res: Response) => {
     const itemId = req.params.id;
     const { available } = req.body;
 
-    const updatedItem = await ItemServices.editItemAvailabilityService(decodedToken.userId, itemId, { available });
+    const updatedItem = await ItemServices.editItemAvailabilityService(decodedToken, itemId, { available });
     sendResponse(res, {
         statusCode: 200,
         success: true,
@@ -156,11 +187,13 @@ const removeItem = catchAsync(async (req: Request, res: Response) => {
 
 export const ItemControllers = {
     addItem,
+    editRentopiaItem,
     editItem,
     getAllItems,
     getAllAvailableItems,
     getSingleItem,
     getSingleAvailableItem,
+    getRentopiaItems,
     getMyItems,
     editItemStatus,
     editItemAvailability,

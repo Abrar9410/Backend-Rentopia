@@ -49,16 +49,13 @@ export const editItemZodSchema = z.object({
     location: z
         .string({ error: "Pick-Up Location must be string" })
         .min(1, "Location is required!")
-        .optional(),
+        .optional,
     pricePerDay: z
         .number({ error: "Price must be number" })
         .positive("Price must be greater than 0")
         .optional(),
     available: z
         .boolean({ error: "The property 'Available' must be boolean" })
-        .optional(),
-    current_status: z
-        .enum(Object.values(Current_Status) as [string], { error: "Invalid Current-Status!" })
         .optional(),
     deleteImages: z.array(z.string()).optional()
 });

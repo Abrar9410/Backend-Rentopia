@@ -8,6 +8,10 @@ import { JwtPayload } from "jsonwebtoken";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { userSearchableFields } from "./user.constant";
 import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
+import { Items } from "../item/item.model";
+import { IItem } from "../item/item.interface";
+import { ItemServices } from "../item/item.service";
+import { ObjectId } from "mongoose";
 
 
 const createUserService = async (payload: Partial<IUser>) => {
@@ -128,10 +132,17 @@ const getSingleUserService = async (id: string) => {
 };
 
 const deleteUserService = async (userId: string) => {
-    const user = await Users.findByIdAndUpdate(userId, { isDeleted: true }, { new: true });
+    const user = await Users.findByIdAndUpdate(userId, { isDeleted: true }, { new: true, runValidators: true });
     if (!user) {
         throw new AppError(httpStatus.NOT_FOUND, "User Not Found!");
     };
+
+    const userItems = await Items.find({ owner: userId });
+
+    await Promise.all(
+        userItems.map((item: IItem) => ItemServices.removeItemService((item._id as unknown as ObjectId).toString()))
+    );
+
     return null;
 };
 

@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { Role } from "../user/user.interface";
 
 export enum Category {
     ELECTRONICS = "Electronics",
@@ -34,6 +35,7 @@ export interface IItem {
     available: boolean;
     current_status: Current_Status;
     owner: Types.ObjectId;
+    ownerRole: Role;
     location: string;
     adv_bookings: Adv_Booking[] | [];
     createdAt?: Date;

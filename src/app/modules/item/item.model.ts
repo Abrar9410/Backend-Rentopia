@@ -1,5 +1,6 @@
 import { Schema, model } from 'mongoose';
 import { Current_Status, IItem } from './item.interface';
+import { Role } from '../user/user.interface';
 
 
 
@@ -45,6 +46,10 @@ const itemSchema = new Schema<IItem>(
             type: Schema.Types.ObjectId,
             ref: 'Users',
             required: true,
+        },
+        ownerRole: {
+            type: String,
+            enum: Object.values(Role)
         },
         location: {
             type: String,
