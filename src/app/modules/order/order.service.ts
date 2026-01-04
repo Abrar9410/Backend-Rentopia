@@ -28,9 +28,9 @@ const createOrderService = async (payload: Partial<IOrder>, userId: string) => {
     try {
         const user = await Users.findById(userId);
 
-        if (!user?.phone || !user.address) {
+        if (!user?.phone || !user?.address) {
             throw new AppError(httpStatus.BAD_REQUEST, "Please Update Your Profile to Rent an Item.")
-        }
+        };
 
         const item = await Items.findById(payload.item);
 
@@ -67,8 +67,8 @@ const createOrderService = async (payload: Partial<IOrder>, userId: string) => {
         };
 
         item.adv_bookings.forEach(booking => {
-            const bookedStart = startOfDay(parseISO(booking.startDate as string));
-            const bookedEnd = endOfDay(parseISO(booking.endDate as string));
+            const bookedStart = startOfDay(booking.startDate as Date);
+            const bookedEnd = endOfDay(booking.endDate as Date);
 
             const isOverlap = !isBefore(endDate, bookedStart) && !isAfter(startDate, bookedEnd);
 
@@ -180,8 +180,27 @@ const getAllOrdersService = async (query: Record<string, string>) => {
     };
 };
 
-const getUserOrdersService = async (userId: string, query: Record<string, string>) => {
-    const queryBuilder = new QueryBuilder(Orders.find({$or: [{renter: userId}, {owner: userId}]}), query)
+const getMyOrdersService = async (userId: string, query: Record<string, string>) => {
+    const queryBuilder = new QueryBuilder(Orders.find({ renter: userId }), query)
+        .filter()
+        .search(orderSearchableFields)
+        .sort()
+        .fields()
+        .paginate();
+
+    const [data, meta] = await Promise.all([
+        queryBuilder.build().populate("item").populate("payment").populate("owner", "name").populate("renter", "name"),
+        queryBuilder.getMeta()
+    ]);
+
+    return {
+        data,
+        meta
+    };
+};
+
+const getCustomerOrdersService = async (userId: string, query: Record<string, string>) => {
+    const queryBuilder = new QueryBuilder(Orders.find({ owner: userId }), query)
         .filter()
         .search(orderSearchableFields)
         .sort()
@@ -288,7 +307,8 @@ const deleteUnpaidOrdersService = async () => {
 export const OrderServices = {
     createOrderService,
     getAllOrdersService,
-    getUserOrdersService,
+    getMyOrdersService,
+    getCustomerOrdersService,
     getOrderByIdService,
     updateOrderStatusService,
     deleteUnpaidOrdersService

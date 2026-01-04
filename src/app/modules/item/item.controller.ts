@@ -75,7 +75,7 @@ const getAllItems = catchAsync(async (req: Request, res: Response) => {
 const getAllAvailableItems = catchAsync(async (req: Request, res: Response) => {
     const query = req.query;
 
-    const result = await ItemServices.getAllItemsService(query as Record<string, string>);
+    const result = await ItemServices.getAllAvailableItemsService(query as Record<string, string>);
 
     sendResponse(res, {
         statusCode: 200,

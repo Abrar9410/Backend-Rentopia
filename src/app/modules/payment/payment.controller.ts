@@ -9,8 +9,8 @@ import { SSLServices } from "../sslCommerz/sslCommerz.service";
 
 
 const initPayment = catchAsync(async (req: Request, res: Response) => {
-    const bookingId = req.params.bookingId;
-    const result = await PaymentServices.initPaymentService(bookingId);
+    const orderId = req.params.orderId;
+    const result = await PaymentServices.initPaymentService(orderId);
 
     sendResponse(res, {
         statusCode: 201,
@@ -62,8 +62,7 @@ const getInvoiceDownloadUrl = catchAsync(async (req: Request, res: Response) => 
     }
 );
 
-const validatePayment = catchAsync(
-    async (req: Request, res: Response) => {
+const validatePayment = catchAsync(async (req: Request, res: Response) => {
         if (envVars.NODE_ENV === "development") {
             console.log("sslcommerz ipn url body", req.body);
         };

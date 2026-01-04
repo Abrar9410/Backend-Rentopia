@@ -20,7 +20,12 @@ router.get("/",
 
 router.get("/my-orders",
     checkAuth(...Object.values(Role)),
-    OrderControllers.getUserOrders
+    OrderControllers.getMyOrders
+);
+
+router.get("/customer-orders",
+    checkAuth(...Object.values(Role)),
+    OrderControllers.getCustomerOrders
 );
 
 router.get("/:orderId",

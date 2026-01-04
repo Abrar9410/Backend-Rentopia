@@ -7,19 +7,32 @@ import { OrderServices } from "./order.service";
 const createOrder = catchAsync(async (req: Request, res: Response) => {
     const decodedToken = req.user as JwtPayload;
 
-    const order = await OrderServices.createOrderService(req.body, decodedToken.userId);
+    const orderData = await OrderServices.createOrderService(req.body, decodedToken.userId);
     
     sendResponse(res, {
         statusCode: 201,
         success: true,
-        message: "Order created successfully!",
-        data: order,
+        message: "Order placed successfully! Please complete the payment to confirm your order.",
+        data: orderData,
     });
 });
 
-const getUserOrders = catchAsync(async (req: Request, res: Response) => {
+const getMyOrders = catchAsync(async (req: Request, res: Response) => {
         const decodedToken = req.user as JwtPayload;
-        const orders = await OrderServices.getUserOrdersService(decodedToken.userId, req.query as Record<string, string>);
+        const orders = await OrderServices.getMyOrdersService(decodedToken.userId, req.query as Record<string, string>);
+        
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: "Orders retrieved successfully!",
+            data: orders,
+        });
+    }
+);
+
+const getCustomerOrders = catchAsync(async (req: Request, res: Response) => {
+        const decodedToken = req.user as JwtPayload;
+        const orders = await OrderServices.getCustomerOrdersService(decodedToken.userId, req.query as Record<string, string>);
         
         sendResponse(res, {
             statusCode: 200,
@@ -73,6 +86,7 @@ export const OrderControllers = {
     createOrder,
     getAllOrders,
     getSingleOrder,
-    getUserOrders,
+    getMyOrders,
+    getCustomerOrders,
     updateOrderStatus,
 }

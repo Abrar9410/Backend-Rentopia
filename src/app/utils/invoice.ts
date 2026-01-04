@@ -42,7 +42,7 @@ export const generatePdf = async (invoiceData: IInvoiceData): Promise<Buffer<Arr
 
             doc.moveDown();
             
-            doc.text(`Total Amount: ৳${invoiceData.totalAmount.toFixed(2)}`);
+            doc.text(`Total Amount: BDT ${invoiceData.totalAmount.toFixed(2)} only`);
 
             doc.moveDown();
 

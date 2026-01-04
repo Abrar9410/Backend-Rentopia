@@ -129,7 +129,7 @@ const getAllAvailableItemsService = async (query: Record<string, string>) => {
 };
 
 const getSingleItemService = async (decodedToken: JwtPayload, itemId: string) => {
-    const item = await Items.findById(itemId);
+    const item = await Items.findById(itemId).populate("owner", "name email picture phone address");
 
     if (!item) {
         throw new AppError(httpStatus.NOT_FOUND, "This Item is Not Available!");
@@ -143,7 +143,7 @@ const getSingleItemService = async (decodedToken: JwtPayload, itemId: string) =>
 };
 
 const getSingleAvailableItemService = async (itemId: string) => {
-    const item = await Items.findById(itemId);
+    const item = await Items.findById(itemId).populate("owner", "name email picture phone address");
 
     if (!item || !item.available) {
         throw new AppError(httpStatus.NOT_FOUND, "This Item is Not Available!");
