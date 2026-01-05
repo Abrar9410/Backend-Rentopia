@@ -58,8 +58,8 @@ const itemSchema = new Schema<IItem>(
         adv_bookings: {
             type: [
                 {
-                    startDate: { type: Date, required: true },
-                    endDate: { type: Date, required: true }
+                    startDate: { type: Date },
+                    endDate: { type: Date }
                 }
             ],
             default: []
