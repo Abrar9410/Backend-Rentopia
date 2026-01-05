@@ -29,7 +29,7 @@ router.get("/customer-orders",
 );
 
 router.get("/:orderId",
-    checkAuth(...Object.values(Role)),
+    checkAuth(Role.ADMIN),
     OrderControllers.getSingleOrder
 );
 

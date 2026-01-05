@@ -8,7 +8,7 @@ import notFound from "./app/middlewares/notFound";
 import { envVars } from "./app/config/env";
 import expressSession from "express-session";
 import cron from 'node-cron';
-import { OrderServices } from "./app/modules/order/order.service";
+import { deleteUnpaidOrdersService, updateStatusAndDeleteOldBookingsOfItems } from "./app/modules/order/order.service";
 
 
 const app = express();
@@ -30,13 +30,28 @@ app.use(expressSession({
 
 cron.schedule('* * * * *', async () => {
     try {
-        await OrderServices.deleteUnpaidOrdersService();
+        await deleteUnpaidOrdersService();
     } catch (error) {
         if (envVars.NODE_ENV === "development") {
             console.log((error as Error).message);
         };
     };
 });
+
+cron.schedule(
+    "1 0 * * *",
+    async () => {
+        try {
+            await updateStatusAndDeleteOldBookingsOfItems();
+        } catch (error) {
+            if (envVars.NODE_ENV === "development") {
+                console.log((error as Error).message);
+            };
+        };
+    },
+    { timezone: "Asia/Dhaka" }
+);
+
 
 app.use("/api", router);
 

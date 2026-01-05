@@ -5,4 +5,4 @@ A RESTful API built with **Express**, **TypeScript**, and **MongoDB (Mongoose)**
 ---
 
 
-[Live Link]()
+[Live Link](https://backend-rentopia.vercel.app)

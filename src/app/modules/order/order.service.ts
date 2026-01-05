@@ -15,7 +15,7 @@ import { orderSearchableFields } from "./order.constant";
 import { Current_Status } from "../item/item.interface";
 import { JwtPayload } from "jsonwebtoken";
 import { Role } from "../user/user.interface";
-import { differenceInCalendarDays, endOfDay, isAfter, isBefore, isSameDay, isToday, parseISO, startOfDay } from "date-fns";
+import { differenceInCalendarDays, endOfDay, format, isAfter, isBefore, isToday, isWithinInterval, parseISO, startOfDay } from "date-fns";
 
 
 
@@ -42,11 +42,11 @@ const createOrderService = async (payload: Partial<IOrder>, userId: string) => {
             throw new AppError(httpStatus.BAD_REQUEST, "You cannot rent your own item!");
         };
 
-        
+
         if (!item?.pricePerDay) {
             throw new AppError(httpStatus.BAD_REQUEST, "No Price mentioned!");
         };
-        
+
         if (!payload.startDate || !payload.endDate) {
             throw new AppError(httpStatus.BAD_REQUEST, "Start-date and End-date are required!");
         };
@@ -54,9 +54,9 @@ const createOrderService = async (payload: Partial<IOrder>, userId: string) => {
         const { startDate: payloadStartDate, endDate: payloadEndDate } = payload;
         const startDate = startOfDay(parseISO(payloadStartDate as string));
         const endDate = endOfDay(parseISO(payloadEndDate as string));
-        
+
         if (
-            item.current_status !== Current_Status.AVAILABLE && 
+            item.current_status !== Current_Status.AVAILABLE &&
             isToday(startDate)
         ) {
             throw new AppError(httpStatus.NOT_ACCEPTABLE, "Item is currently not available for rent!");
@@ -75,10 +75,18 @@ const createOrderService = async (payload: Partial<IOrder>, userId: string) => {
             if (isOverlap) {
                 throw new AppError(
                     httpStatus.CONFLICT,
-                    `Item is already booked from ${booking.startDate} to ${booking.endDate}. Please choose different dates.`
+                    `Item is already booked from ${format(booking.startDate, "PP")} to ${format(booking.endDate, "PP")}. Please choose different dates.`
                 );
             }
         });
+
+        if (
+            item.current_status === Current_Status.AVAILABLE &&
+            isToday(startDate)
+        ) {
+            item.current_status = Current_Status.OCCUPIED;
+            await item.save({ session });
+        };
 
 
         // Count days inclusively (same date = 1 day)
@@ -170,7 +178,11 @@ const getAllOrdersService = async (query: Record<string, string>) => {
         .paginate();
 
     const [data, meta] = await Promise.all([
-        queryBuilder.build().populate("item").populate("payment").populate("owner", "name email phone address").populate("renter", "name email phone address"),
+        queryBuilder.build()
+            .populate("item")
+            .populate("payment")
+            .populate("owner", "name email phone address picture role")
+            .populate("renter", "name email phone address picture role"),
         queryBuilder.getMeta()
     ]);
 
@@ -189,7 +201,11 @@ const getMyOrdersService = async (userId: string, query: Record<string, string>)
         .paginate();
 
     const [data, meta] = await Promise.all([
-        queryBuilder.build().populate("item").populate("payment").populate("owner", "name").populate("renter", "name"),
+        queryBuilder.build()
+            .populate("item")
+            .populate("payment")
+            .populate("owner", "name picture address role")
+            .populate("renter", "name"),
         queryBuilder.getMeta()
     ]);
 
@@ -208,7 +224,11 @@ const getCustomerOrdersService = async (userId: string, query: Record<string, st
         .paginate();
 
     const [data, meta] = await Promise.all([
-        queryBuilder.build().populate("item").populate("payment").populate("owner", "name").populate("renter", "name"),
+        queryBuilder.build()
+            .populate("item")
+            .populate("payment")
+            .populate("owner", "name")
+            .populate("renter", "name picture address role"),
         queryBuilder.getMeta()
     ]);
 
@@ -223,7 +243,7 @@ const getOrderByIdService = async (decodedToken: JwtPayload, orderId: string) =>
     if (!user) {
         throw new AppError(httpStatus.UNAUTHORIZED, "User not found!");
     };
-    
+
     const order = await Orders.findById(orderId);
     if (!order) {
         throw new AppError(httpStatus.NOT_FOUND, "Order not found!");
@@ -240,7 +260,7 @@ const getOrderByIdService = async (decodedToken: JwtPayload, orderId: string) =>
     return order;
 };
 
-const updateOrderStatusService = async (id: string, payload: {status: ORDER_STATUS}) => {
+const updateOrderStatusService = async (id: string, payload: { status: ORDER_STATUS }) => {
     const updatedOrder = await Orders.findByIdAndUpdate(
         id,
         { status: payload.status },
@@ -249,51 +269,83 @@ const updateOrderStatusService = async (id: string, payload: {status: ORDER_STAT
 
     if (!updatedOrder) {
         throw new AppError(httpStatus.NOT_FOUND, "Order not found!");
-    }
+    };
 
     return updatedOrder;
 };
 
-const deleteUnpaidOrdersService = async () => {
+export const deleteUnpaidOrdersService = async () => {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
     const session = await Orders.startSession();
     session.startTransaction();
 
     try {
+        // 1️⃣ Find unpaid orders older than 30 minutes
         const unpaidOrders = await Orders.find({
             createdAt: { $lte: thirtyMinutesAgo },
-            status: ORDER_STATUS.PENDING
+            status: ORDER_STATUS.PENDING,
         }).session(session);
+
+        if (unpaidOrders.length < 1) {
+            await session.commitTransaction();
+            session.endSession();
+            return;
+        };
 
         const orderIds = unpaidOrders.map(order => order._id);
 
+        // 2️⃣ Delete unpaid payments
         await Payments.deleteMany({
             order: { $in: orderIds },
-            status: PAYMENT_STATUS.UNPAID
+            status: PAYMENT_STATUS.UNPAID,
         }).session(session);
 
-        await Orders.deleteMany({
-            _id: { $in: orderIds },
-            status: ORDER_STATUS.PENDING
-        }).session(session);
-
+        // 3️⃣ Remove adv_bookings safely (DAY-BASED, NOT TIME-BASED)
         for (const order of unpaidOrders) {
-            const item = await Items.findById(order.item).session(session);
+            const startDayStart = startOfDay(new Date(order.startDate));
+            const startDayEnd = endOfDay(new Date(order.startDate));
 
-            if (item) {
-                item.adv_bookings = item.adv_bookings.filter(booking => {
-                    return !(
-                        isSameDay(booking.startDate, order.startDate) &&
-                        isSameDay(booking.endDate, order.endDate)
-                    );
-                });
+            const endDayStart = startOfDay(new Date(order.endDate));
+            const endDayEnd = endOfDay(new Date(order.endDate));
 
-                await item.save({ session });
+            const item = await Items.findByIdAndUpdate(
+                order.item,
+                {
+                    $pull: {
+                        adv_bookings: {
+                            startDate: { $gte: startDayStart, $lte: startDayEnd },
+                            endDate: { $gte: endDayStart, $lte: endDayEnd },
+                        },
+                    },
+                },
+                { new: true, runValidators: true, session }
+            );
+
+            const todayStart = startOfDay(new Date());
+            const todayEnd = endOfDay(new Date());
+
+            const orderCoversToday =
+                new Date(order.startDate) <= todayEnd &&
+                new Date(order.endDate) >= todayStart;
+
+            if (orderCoversToday && item?.current_status === Current_Status.OCCUPIED) {
+                await Items.updateOne(
+                    { _id: order.item },
+                    { $set: { current_status: Current_Status.AVAILABLE } },
+                    { session }
+                );
             }
         };
 
-        await session.commitTransaction(); //transaction
+        // 4️⃣ Delete unpaid orders
+        await Orders.deleteMany({
+            _id: { $in: orderIds },
+            status: ORDER_STATUS.PENDING,
+        }).session(session);
+
+        // 5️⃣ Commit transaction
+        await session.commitTransaction();
         session.endSession();
     } catch (error) {
         await session.abortTransaction(); // rollback
@@ -303,6 +355,54 @@ const deleteUnpaidOrdersService = async () => {
     }
 };
 
+export const updateStatusAndDeleteOldBookingsOfItems = async () => {
+
+    const todayStart = startOfDay(new Date());
+
+    // 1️⃣ Fetch ALL items that have adv_bookings
+    const items = await Items.find({
+        adv_bookings: { $exists: true, $ne: [] },
+    });
+
+    for (const item of items) {
+        let statusChanged = false;
+
+        // 2️⃣ Remove expired bookings (endDate < today start)
+        const validBookings = item.adv_bookings.filter(booking => {
+            return booking.endDate >= todayStart;
+        });
+
+        // 3️⃣ Check if today is covered by any booking
+        const isBookedToday = validBookings.some(booking =>
+            isWithinInterval(todayStart, {
+                start: startOfDay(new Date(booking.startDate)),
+                end: endOfDay(new Date(booking.endDate)),
+            })
+        );
+
+        // 4️⃣ Update status based on bookings
+        if (isBookedToday && item.current_status === Current_Status.AVAILABLE) {
+            item.current_status = Current_Status.OCCUPIED;
+            statusChanged = true;
+        };
+
+        if (!isBookedToday && item.current_status === Current_Status.OCCUPIED) {
+            item.current_status = Current_Status.AVAILABLE;
+            statusChanged = true;
+        };
+
+        // 5️⃣ Save only if something changed
+        if (
+            statusChanged ||
+            validBookings.length !== item.adv_bookings.length
+        ) {
+            item.adv_bookings = validBookings;
+            await item.save();
+        };
+    };
+};
+
+
 
 export const OrderServices = {
     createOrderService,
@@ -311,5 +411,4 @@ export const OrderServices = {
     getCustomerOrdersService,
     getOrderByIdService,
     updateOrderStatusService,
-    deleteUnpaidOrdersService
 };
