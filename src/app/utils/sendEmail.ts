@@ -41,7 +41,7 @@ export const sendEmail = async ({
         const templatePath = path.join(__dirname, `templates/${templateName}.ejs`);
         const html = await ejs.renderFile(templatePath, templateData);
         const info = await transporter.sendMail({
-            from: `"Rentopia" <${envVars.EMAIL_SENDER.SMTP_USER}>`,
+            from: envVars.EMAIL_SENDER.SMTP_FROM,
             to: to,
             cc: cc? cc : undefined,
             subject: subject,
