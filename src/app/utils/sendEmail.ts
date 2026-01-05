@@ -57,7 +57,7 @@ export const sendEmail = async ({
             console.log(`\u2709\uFE0F Email sent to ${to}: ${info.messageId}`);
         };
     } catch (error: any) {
-        if (envVars.NODE_ENV === "development") {
+        if (envVars.NODE_ENV === "production") {
             console.log("email sending error", error.message);
         };
         throw new AppError(401, "Email error");
