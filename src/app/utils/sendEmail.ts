@@ -10,16 +10,13 @@ import httpStatus from "http-status-codes";
 
 const transporter = nodemailer.createTransport({
     // port: envVars.EMAIL_SENDER.SMTP_PORT,
-    secure: false,
+    secure: true,
     auth: {
         user: envVars.EMAIL_SENDER.SMTP_USER,
         pass: envVars.EMAIL_SENDER.SMTP_PASS
     },
     port: Number(envVars.EMAIL_SENDER.SMTP_PORT),
-    host: envVars.EMAIL_SENDER.SMTP_HOST,
-    tls: {
-        rejectUnauthorized: false,
-    },
+    host: envVars.EMAIL_SENDER.SMTP_HOST
 });
 
 interface SendEmailOptions {
@@ -63,9 +60,9 @@ export const sendEmail = async ({
             console.log(`\u2709\uFE0F Email sent to ${to}: ${info.messageId}`);
         };
     } catch (error: any) {
-        // if (envVars.NODE_ENV === "development") {
-            console.log("email sending error", error);
-        // };
+        if (envVars.NODE_ENV === "development") {
+            console.log("email sending error", error.message);
+        };
         throw new AppError(httpStatus.EXPECTATION_FAILED, error.message || "Failed to send email.");
     }
 };
