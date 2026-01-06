@@ -60,9 +60,9 @@ export const sendEmail = async ({
             console.log(`\u2709\uFE0F Email sent to ${to}: ${info.messageId}`);
         };
     } catch (error: any) {
-        if (envVars.NODE_ENV === "development") {
-            console.log("email sending error", error.message);
-        };
+        // if (envVars.NODE_ENV === "development") {
+            console.log("email sending error", error);
+        // };
         throw new AppError(httpStatus.EXPECTATION_FAILED, error.message || "Failed to send email.");
     }
 };
