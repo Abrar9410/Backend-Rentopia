@@ -94,8 +94,12 @@ const loadEnvVariables = (): EnvConfig => {
 
     requiredEnvVariables.forEach(key => {
         if (!process.env[key]) {
-            throw new Error(`Missing required environment variable ${key}`)
-        }
+            if (process.env.NODE_ENV === "production") {
+                console.warn(`⚠️ Warning: ${key} is missing from process.env at initialization.`);
+            } else {
+                throw new Error(`Missing required environment variable ${key}`);
+            }
+        };
     });
 
     return {
