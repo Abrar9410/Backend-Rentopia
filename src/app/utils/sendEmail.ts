@@ -4,6 +4,9 @@ import nodemailer from "nodemailer";
 import path from "path";
 import { envVars } from "../config/env";
 import AppError from "../errorHelpers/AppError";
+import httpStatus from "http-status-codes";
+
+
 
 const transporter = nodemailer.createTransport({
     // port: envVars.EMAIL_SENDER.SMTP_PORT,
@@ -60,6 +63,6 @@ export const sendEmail = async ({
         if (envVars.NODE_ENV === "development") {
             console.log("email sending error", error.message);
         };
-        throw new AppError(401, "Email error");
+        throw new AppError(httpStatus.EXPECTATION_FAILED, error.message || "Failed to send email.");
     }
 };
