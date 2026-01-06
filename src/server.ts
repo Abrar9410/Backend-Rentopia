@@ -4,6 +4,7 @@ import app from "./app";
 import { envVars } from "./app/config/env";
 
 let server: Server;
+const PORT = envVars.PORT || 5000;
 
 const startServer = async () => {
     try {
@@ -13,9 +14,9 @@ const startServer = async () => {
             console.log("Connected to Database!");
         };
 
-        server = app.listen(envVars.PORT, () => {
+        server = app.listen(PORT, () => {
             if (envVars.NODE_ENV === "development") {
-                console.log("Server is running on port", envVars.PORT);
+                console.log("Server is running on port", PORT);
             };
         });
     } catch (error) {
