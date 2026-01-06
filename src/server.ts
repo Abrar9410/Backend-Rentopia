@@ -4,25 +4,19 @@ import app from "./app";
 import { envVars } from "./app/config/env";
 
 let server: Server;
-const PORT = envVars.PORT || 5000;
+const PORT = Number(envVars.PORT) || 5000;
 
 const startServer = async () => {
     try {
         await mongoose.connect(envVars.DB_URL);
 
-        if (envVars.NODE_ENV === "development") {
-            console.log("Connected to Database!");
-        };
+        console.log("Connected to Database!");
 
         server = app.listen(PORT, () => {
-            if (envVars.NODE_ENV === "development") {
-                console.log("Server is running on port", PORT);
-            };
+            console.log("Server is running on port", PORT);
         });
     } catch (error) {
-        if (envVars.NODE_ENV === "development") {
-            console.log(error);
-        };
+        console.log(error);
     }
 };
 
