@@ -13,6 +13,12 @@ import { deleteUnpaidOrdersService, updateStatusAndDeleteOldBookingsOfItems } fr
 
 const app = express();
 
+app.get("/", (req: Request, res: Response) => {
+    res.status(200).send({
+        message: "Rentopia Backend is Running."
+    })
+});
+
 app.set("trust proxy", 1);
 app.use(cors({
     origin: ['http://localhost:3000', envVars.FRONTEND_URL],
@@ -55,11 +61,6 @@ cron.schedule(
 
 app.use("/api", router);
 
-app.get("/", (req: Request, res: Response) => {
-    res.status(200).send({
-        message: "Rentopia Backend is Running."
-    })
-});
 
 app.use(globalErrorHandler);
 
