@@ -26,7 +26,7 @@ app.use(cors({
 }));
 app.use(compression());
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(expressSession({
     secret: envVars.EXPRESS_SESSION_SECRET,
@@ -38,9 +38,7 @@ cron.schedule('* * * * *', async () => {
     try {
         await deleteUnpaidOrdersService();
     } catch (error) {
-        if (envVars.NODE_ENV === "development") {
-            console.log((error as Error).message);
-        };
+        console.log((error as Error).message);
     };
 });
 
@@ -50,9 +48,7 @@ cron.schedule(
         try {
             await updateStatusAndDeleteOldBookingsOfItems();
         } catch (error) {
-            if (envVars.NODE_ENV === "development") {
-                console.log((error as Error).message);
-            };
+            console.log((error as Error).message);
         };
     },
     { timezone: "Asia/Dhaka" }

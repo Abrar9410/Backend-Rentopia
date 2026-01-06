@@ -4,7 +4,7 @@ import app from "./app";
 import { envVars } from "./app/config/env";
 
 let server: Server;
-const PORT = Number(envVars.PORT) || 5000;
+const PORT = Number(process.env.PORT) || 5000;
 
 const startServer = async () => {
     try {
@@ -25,9 +25,7 @@ startServer();
 
 // SIGTERM Error
 process.on("SIGTERM", () => {
-    if (envVars.NODE_ENV === "development") {
-        console.log("SIGTERM signal received! Server shutting down...");
-    };
+    console.log("SIGTERM signal received! Server shutting down...");
 
     if (server) {
         server.close(() => {
@@ -41,9 +39,7 @@ process.on("SIGTERM", () => {
 
 // Unhandled Rejection Error
 process.on("unhandledRejection", (error) => {
-    if (envVars.NODE_ENV === "development") {
-        console.log("Unhandled Rejection detected! Server shutting down...", error);
-    };
+    console.log("Unhandled Rejection detected! Server shutting down...", error);
 
     if (server) {
         server.close(() => {
@@ -57,9 +53,7 @@ process.on("unhandledRejection", (error) => {
 
 // Uncaught Exception Error
 process.on("uncaughtException", (error) => {
-    if (envVars.NODE_ENV === "development") {
-        console.log("Uncaught Exception detected! Server shutting down...", error);
-    };
+    console.log("Uncaught Exception detected! Server shutting down...", error);
 
     if (server) {
         server.close(() => {
