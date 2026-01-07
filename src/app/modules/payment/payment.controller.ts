@@ -10,7 +10,8 @@ import { SSLServices } from "../sslCommerz/sslCommerz.service";
 
 const initPayment = catchAsync(async (req: Request, res: Response) => {
     const orderId = req.params.orderId;
-    const result = await PaymentServices.initPaymentService(orderId);
+    const decodedToken = req.user as JwtPayload;
+    const result = await PaymentServices.initPaymentService(orderId, decodedToken.userId);
 
     sendResponse(res, {
         statusCode: 201,
@@ -33,7 +34,7 @@ const failPayment = catchAsync(async (req: Request, res: Response) => {
     const query = req.query;
     const result = await PaymentServices.failPaymentService(query as Record<string, string>);
 
-    if (!result.success) {
+    if (result && !result.success) {
         res.redirect(`${envVars.SSL.SSL_FAIL_FRONTEND_URL}?transactionId=${query.transactionId}&message=${result.message}&amount=${query.amount}&status=${query.status}`);
     };
 });
@@ -42,7 +43,7 @@ const cancelPayment = catchAsync(async (req: Request, res: Response) => {
     const query = req.query;
     const result = await PaymentServices.cancelPaymentService(query as Record<string, string>);
 
-    if (!result.success) {
+    if (result && !result.success) {
         res.redirect(`${envVars.SSL.SSL_CANCEL_FRONTEND_URL}?transactionId=${query.transactionId}&message=${result.message}&amount=${query.amount}&status=${query.status}`);
     };
 });

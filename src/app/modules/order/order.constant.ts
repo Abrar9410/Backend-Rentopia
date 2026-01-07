@@ -1,1 +1,0 @@
-export const orderSearchableFields = ["renter", "item", "owner"];

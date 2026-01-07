@@ -11,7 +11,6 @@ import { ORDER_STATUS, IOrder } from "./order.interface";
 import { Orders } from "./order.model";
 import { getTransactionId } from "../../utils/getTransactionId";
 import { QueryBuilder } from "../../utils/QueryBuilder";
-import { orderSearchableFields } from "./order.constant";
 import { Current_Status } from "../item/item.interface";
 import { JwtPayload } from "jsonwebtoken";
 import { Role } from "../user/user.interface";
@@ -172,7 +171,7 @@ const createOrderService = async (payload: Partial<IOrder>, userId: string) => {
 const getAllOrdersService = async (query: Record<string, string>) => {
     const queryBuilder = new QueryBuilder(Orders.find(), query)
         .filter()
-        .search(orderSearchableFields)
+        .search([])
         .sort()
         .fields()
         .paginate();
@@ -195,7 +194,7 @@ const getAllOrdersService = async (query: Record<string, string>) => {
 const getMyOrdersService = async (userId: string, query: Record<string, string>) => {
     const queryBuilder = new QueryBuilder(Orders.find({ renter: userId }), query)
         .filter()
-        .search(orderSearchableFields)
+        .search([])
         .sort()
         .fields()
         .paginate();
@@ -204,7 +203,7 @@ const getMyOrdersService = async (userId: string, query: Record<string, string>)
         queryBuilder.build()
             .populate("item")
             .populate("payment")
-            .populate("owner", "name picture address role")
+            .populate("owner", "name picture email phone role")
             .populate("renter", "name"),
         queryBuilder.getMeta()
     ]);
@@ -218,7 +217,7 @@ const getMyOrdersService = async (userId: string, query: Record<string, string>)
 const getCustomerOrdersService = async (userId: string, query: Record<string, string>) => {
     const queryBuilder = new QueryBuilder(Orders.find({ owner: userId }), query)
         .filter()
-        .search(orderSearchableFields)
+        .search([])
         .sort()
         .fields()
         .paginate();
@@ -228,7 +227,7 @@ const getCustomerOrdersService = async (userId: string, query: Record<string, st
             .populate("item")
             .populate("payment")
             .populate("owner", "name")
-            .populate("renter", "name picture address role"),
+            .populate("renter", "name picture email phone role"),
         queryBuilder.getMeta()
     ]);
 

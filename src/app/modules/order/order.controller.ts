@@ -25,7 +25,8 @@ const getMyOrders = catchAsync(async (req: Request, res: Response) => {
             statusCode: 200,
             success: true,
             message: "Orders retrieved successfully!",
-            data: orders,
+            data: orders.data,
+            meta: orders.meta
         });
     }
 );
@@ -38,7 +39,8 @@ const getCustomerOrders = catchAsync(async (req: Request, res: Response) => {
             statusCode: 200,
             success: true,
             message: "Orders retrieved successfully!",
-            data: orders,
+            data: orders.data,
+            meta: orders.meta
         });
     }
 );

@@ -8,7 +8,6 @@ export enum ORDER_STATUS {
     CANCELLED = "CANCELLED",
     ONGOING = "ONGOING",
     COMPLETED = "COMPLETED",
-    FAILED = "FAILED"
 };
 
 export interface IOrder {

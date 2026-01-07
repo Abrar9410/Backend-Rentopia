@@ -16,7 +16,7 @@ import { Users } from "../user/user.model";
 
 
 
-const initPaymentService = async (orderId: string) => {
+const initPaymentService = async (orderId: string, userId: string) => {
 
     const payment = await Payments.findOne({ order: orderId });
 
@@ -24,7 +24,11 @@ const initPaymentService = async (orderId: string) => {
         throw new AppError(httpStatus.NOT_FOUND, "Payment Not Found. You have not rented this item!");
     };
 
-    const order = await Orders.findById(payment.order);
+    const order = await Orders.findById(payment.order).populate("renter", "name email phone address");
+
+    if (order?.renter._id.toString() !== userId) {
+        throw new AppError(httpStatus.FORBIDDEN, "You are not permitted to initiate payment for this order!");
+    };
 
     const userAddress = (order?.renter as any).address;
     const userEmail = (order?.renter as any).email;
@@ -148,67 +152,28 @@ const successPaymentService = async (query: Record<string, string>) => {
 };
 
 const failPaymentService = async (query: Record<string, string>) => {
-
-    // Update Order Status to FAIL
     // Update Payment Status to FAIL
-
-    const session = await Orders.startSession();
-    session.startTransaction();
-
     try {
-        const updatedPayment = await Payments.findOneAndUpdate({ transactionId: query.transactionId }, {
+        await Payments.findOneAndUpdate({ transactionId: query.transactionId }, {
             status: PAYMENT_STATUS.FAILED,
-        }, { new: true, runValidators: true, session: session });
+        }, { new: true, runValidators: true });
 
-        await Orders
-            .findByIdAndUpdate(
-                updatedPayment?.order,
-                { status: ORDER_STATUS.FAILED },
-                { runValidators: true, session }
-            );
-
-        await session.commitTransaction(); //transaction
-        session.endSession();
-        return { success: false, message: "Payment Failed" }
+        return { success: false, message: "Payment Failed" };
     } catch (error) {
-        await session.abortTransaction(); // rollback
-        session.endSession();
-        // throw new AppError(httpStatus.BAD_REQUEST, error) ❌❌
-        throw error
+        console.log(error);
     }
 };
 
 const cancelPaymentService = async (query: Record<string, string>) => {
-
-    // Update Order Status to CANCEL
     // Update Payment Status to CANCEL
-
-    const session = await Orders.startSession();
-    session.startTransaction()
-
     try {
-
-
-        const updatedPayment = await Payments.findOneAndUpdate({ transactionId: query.transactionId }, {
+        await Payments.findOneAndUpdate({ transactionId: query.transactionId }, {
             status: PAYMENT_STATUS.CANCELLED,
-        }, { runValidators: true, session: session });
-
-        await Orders
-            .findByIdAndUpdate(
-                updatedPayment?.order,
-                { status: ORDER_STATUS.CANCELLED },
-                { runValidators: true, session }
-            );
-
-        await session.commitTransaction(); //transaction
-        session.endSession();
+        }, { runValidators: true });
 
         return { success: false, message: "Payment Cancelled" };
     } catch (error) {
-        await session.abortTransaction(); // rollback
-        session.endSession();
-        // throw new AppError(httpStatus.BAD_REQUEST, error) ❌❌
-        throw error;
+        console.log(error);
     }
 };
 
