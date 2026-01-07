@@ -21,9 +21,9 @@ export const uploadBufferToCloudinary = async (buffer: Buffer, fileName: string)
 
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
-                    resource_type: "image",
+                    resource_type: "auto",
                     public_id: public_id,
-                    folder: "pdf"
+                    folder: "Rentopia/pdf"
                 },
                 (error, result) => {
                     if (error) return reject(error);
