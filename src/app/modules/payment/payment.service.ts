@@ -217,15 +217,20 @@ const cancelPaymentService = async (query: Record<string, string>) => {
 const getInvoiceDownloadUrlService = async (paymentId: string, userId: string) => {
     const payment = await Payments.findById(paymentId).populate({
         path: "order",
-        select: "renter"
+        select: "renter owner"
     }).select("invoiceUrl order");
 
     if (!payment) {
         throw new AppError(404, "Payment not found!");
     };
 
-    if ((payment.order as unknown as IOrder).renter.toString() !== userId) {
-        throw new AppError(403, "You are Not permitted to View this route!");
+    const order = payment.order as unknown as IOrder;
+
+    const renterId = order.renter.toString();
+    const ownerId = order.owner.toString();
+
+    if (renterId !== userId && ownerId !== userId) {
+        throw new AppError(403, "You are not permitted to view this route!");
     };
 
     if (!payment.invoiceUrl) {
@@ -235,11 +240,26 @@ const getInvoiceDownloadUrlService = async (paymentId: string, userId: string) =
     return payment.invoiceUrl;
 };
 
+const getPaymentByTransactionIdService = async (transactionId: string, userId: string) => {
+    const payment = await Payments.findOne({ transactionId }).populate("order", "renter");
+
+    if (!payment) {
+        throw new AppError(404, "Payment not found!");
+    };
+
+    if ((payment.order as unknown as IOrder).renter.toString() !== userId) {
+        throw new AppError(403, "You are Not permitted to View this route!");
+    };
+
+    return payment;
+};
+
 
 export const PaymentServices = {
     initPaymentService,
     successPaymentService,
     failPaymentService,
     cancelPaymentService,
-    getInvoiceDownloadUrlService
+    getInvoiceDownloadUrlService,
+    getPaymentByTransactionIdService
 };

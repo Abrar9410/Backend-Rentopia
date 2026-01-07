@@ -62,6 +62,21 @@ const getInvoiceDownloadUrl = catchAsync(async (req: Request, res: Response) => 
     }
 );
 
+const getPaymentByTransactionId = catchAsync(async (req: Request, res: Response) => {
+        const decodedToken = req.user as JwtPayload;
+        const { transactionId } = req.params;
+
+        const result = await PaymentServices.getPaymentByTransactionIdService(transactionId, decodedToken.userId);
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: "Payment retrieved successfully",
+            data: result,
+        });
+    }
+);
+
 const validatePayment = catchAsync(async (req: Request, res: Response) => {
         if (envVars.NODE_ENV === "development") {
             console.log("sslcommerz ipn url body", req.body);
@@ -84,5 +99,6 @@ export const PaymentControllers = {
     failPayment,
     cancelPayment,
     getInvoiceDownloadUrl,
+    getPaymentByTransactionId,
     validatePayment
 };
