@@ -17,25 +17,26 @@ export const uploadBufferToCloudinary = async (buffer: Buffer, fileName: string)
     try {
         return new Promise((resolve, reject) => {
 
-            const public_id = `pdf/${fileName}-${Date.now()}`
+            const public_id = `${fileName}-${Date.now()}`
 
-            const bufferStream = new stream.PassThrough();
-            bufferStream.end(buffer);
-
-            cloudinary.uploader.upload_stream(
+            const uploadStream = cloudinary.uploader.upload_stream(
                 {
-                    resource_type: "raw",
+                    resource_type: "raw",            // ✅ REQUIRED for PDFs
+                    folder: "pdf",
                     public_id: public_id,
-                    folder: "pdf"
+                    filename_override: `${fileName}.pdf`, // ✅ ensures correct filename
+                    use_filename: true,
                 },
                 (error, result) => {
-                    if (error) {
-                        return reject(error);
-                    };
-                    resolve(result);
+                    if (error) return reject(error);
+                    resolve(result as UploadApiResponse);
                 }
-            )
-            .end(buffer);
+            );
+
+            // ✅ Correct streaming
+            const bufferStream = new stream.PassThrough();
+            bufferStream.end(buffer);
+            bufferStream.pipe(uploadStream);
         })
     } catch (error: any) {
         if (envVars.NODE_ENV === "development") {

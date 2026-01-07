@@ -141,7 +141,7 @@ const successPaymentService = async (query: Record<string, string>) => {
         return { success: true, message: "Payment Completed Successfully!" };
     } catch (error) {
         await session.abortTransaction(); // rollback
-        session.endSession()
+        session.endSession();
         // throw new AppError(httpStatus.BAD_REQUEST, error) ❌❌
         throw error;
     }
@@ -156,8 +156,6 @@ const failPaymentService = async (query: Record<string, string>) => {
     session.startTransaction();
 
     try {
-
-
         const updatedPayment = await Payments.findOneAndUpdate({ transactionId: query.transactionId }, {
             status: PAYMENT_STATUS.FAILED,
         }, { new: true, runValidators: true, session: session });
