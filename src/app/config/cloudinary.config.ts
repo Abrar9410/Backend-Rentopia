@@ -21,11 +21,9 @@ export const uploadBufferToCloudinary = async (buffer: Buffer, fileName: string)
 
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
-                    resource_type: "raw",            // ✅ REQUIRED for PDFs
-                    folder: "pdf",
+                    resource_type: "auto",
                     public_id: public_id,
-                    filename_override: `${fileName}.pdf`, // ✅ ensures correct filename
-                    use_filename: true,
+                    folder: "pdf"
                 },
                 (error, result) => {
                     if (error) return reject(error);
