@@ -41,7 +41,8 @@ export const editItemZodSchema = z.object({
         .optional(),
     specifications: z
         .array(z.string({ error: "Each specification must be string" }), {
-            error: "Specifications must be an array of strings" })
+            error: "Specifications must be an array of strings"
+        })
         .optional(),
     category: z
         .enum(Object.values(Category) as [string], { error: "Invalid category" })
@@ -49,7 +50,7 @@ export const editItemZodSchema = z.object({
     location: z
         .string({ error: "Pick-Up Location must be string" })
         .min(1, "Location is required!")
-        .optional,
+        .optional(),
     pricePerDay: z
         .number({ error: "Price must be number" })
         .positive("Price must be greater than 0")
