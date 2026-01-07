@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 interface EnvConfig {
+    PORT: string;
     DB_URL: string;
     NODE_ENV: "development" | "production";
     SALT: string;
@@ -53,6 +54,7 @@ interface EnvConfig {
 const loadEnvVariables = (): EnvConfig => {
 
     const requiredEnvVariables: string[] = [
+        "PORT",
         "DB_URL",
         "NODE_ENV",
         "SALT",
@@ -94,15 +96,12 @@ const loadEnvVariables = (): EnvConfig => {
 
     requiredEnvVariables.forEach(key => {
         if (!process.env[key]) {
-            if (process.env.NODE_ENV === "production") {
-                console.warn(`⚠️ Warning: ${key} is missing from process.env at initialization.`);
-            } else {
-                throw new Error(`Missing required environment variable ${key}`);
-            }
-        };
+            throw new Error(`Missing required environment variable ${key}`)
+        }
     });
 
     return {
+        PORT: process.env.PORT as string,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         DB_URL: process.env.DB_URL!,
         NODE_ENV: process.env.NODE_ENV as "development" | "production",

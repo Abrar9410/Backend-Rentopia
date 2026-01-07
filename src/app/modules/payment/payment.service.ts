@@ -10,7 +10,7 @@ import { Payments } from "./payment.model";
 import { generatePdf, IInvoiceData } from "../../utils/invoice";
 import { IItem } from "../item/item.interface";
 import { IUser } from "../user/user.interface";
-import { sendEmail } from "../../utils/sendEmail";
+// import { sendEmail } from "../../utils/sendEmail";
 import { uploadBufferToCloudinary } from "../../config/cloudinary.config";
 import { Users } from "../user/user.model";
 
@@ -120,20 +120,20 @@ const successPaymentService = async (query: Record<string, string>) => {
                 { runValidators: true, session }
             );
 
-        await sendEmail({
-            to: (updatedOrder.renter as unknown as IUser).email,
-            cc: (updatedOrder.owner as unknown as IUser).email,
-            subject: "Your Order Invoice",
-            templateName: "invoice",
-            templateData: invoiceData,
-            attachments: [
-                {
-                    filename: "invoice.pdf",
-                    content: pdfBuffer,
-                    contentType: "application/pdf"
-                }
-            ]
-        });
+        // await sendEmail({
+        //     to: (updatedOrder.renter as unknown as IUser).email,
+        //     cc: (updatedOrder.owner as unknown as IUser).email,
+        //     subject: "Your Order Invoice",
+        //     templateName: "invoice",
+        //     templateData: invoiceData,
+        //     attachments: [
+        //         {
+        //             filename: "invoice.pdf",
+        //             content: pdfBuffer,
+        //             contentType: "application/pdf"
+        //         }
+        //     ]
+        // });
 
         await session.commitTransaction(); //transaction
         session.endSession();
