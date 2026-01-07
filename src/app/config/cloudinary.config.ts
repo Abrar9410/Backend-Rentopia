@@ -21,7 +21,7 @@ export const uploadBufferToCloudinary = async (buffer: Buffer, fileName: string)
 
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
-                    resource_type: "auto",
+                    resource_type: "image",
                     public_id: public_id,
                     folder: "pdf"
                 },
