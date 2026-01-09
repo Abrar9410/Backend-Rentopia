@@ -9,7 +9,7 @@ export enum Category {
     HOME_APPLIANCES = "Home Appliances",
     BOOKS = "Books",
     VEHICLES = "Vehicles",
-    GAMES = "Games",
+    GAMING = "Gaming",
     OTHERS = "Others"
 };
 
