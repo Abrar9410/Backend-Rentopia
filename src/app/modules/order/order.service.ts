@@ -259,16 +259,31 @@ const getOrderByIdService = async (decodedToken: JwtPayload, orderId: string) =>
     return order;
 };
 
-const updateOrderStatusService = async (id: string, payload: { status: ORDER_STATUS }) => {
+const updateOrderStatusService = async (decodedToken: JwtPayload, orderId: string, payload: { status: ORDER_STATUS }) => {
+    const order = await Orders.findById(orderId);
+
+    if (!order) {
+        throw new AppError(httpStatus.NOT_FOUND, "Order not found!");
+    };
+
+    if (decodedToken.role === Role.USER) {
+        if (order.renter.toString() !== decodedToken.userId && order.owner.toString() !== decodedToken.userId) {
+            throw new AppError(httpStatus.FORBIDDEN, "You are not authorized to update this order status!");
+        };
+        
+        if (payload.status !== ORDER_STATUS.ONGOING && payload.status !== ORDER_STATUS.COMPLETED) {
+            throw new AppError(
+                httpStatus.FORBIDDEN,
+                `You are not authorized to update this order status to ${payload.status}!`
+            );
+        };
+    };
+
     const updatedOrder = await Orders.findByIdAndUpdate(
-        id,
+        orderId,
         { status: payload.status },
         { new: true, runValidators: true }
     );
-
-    if (!updatedOrder) {
-        throw new AppError(httpStatus.NOT_FOUND, "Order not found!");
-    };
 
     return updatedOrder;
 };

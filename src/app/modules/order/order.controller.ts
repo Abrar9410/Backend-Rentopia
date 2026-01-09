@@ -8,7 +8,7 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
     const decodedToken = req.user as JwtPayload;
 
     const orderData = await OrderServices.createOrderService(req.body, decodedToken.userId);
-    
+
     sendResponse(res, {
         statusCode: 201,
         success: true,
@@ -18,69 +18,72 @@ const createOrder = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMyOrders = catchAsync(async (req: Request, res: Response) => {
-        const decodedToken = req.user as JwtPayload;
-        const orders = await OrderServices.getMyOrdersService(decodedToken.userId, req.query as Record<string, string>);
-        
-        sendResponse(res, {
-            statusCode: 200,
-            success: true,
-            message: "Orders retrieved successfully!",
-            data: orders.data,
-            meta: orders.meta
-        });
-    }
+    const decodedToken = req.user as JwtPayload;
+    const orders = await OrderServices.getMyOrdersService(decodedToken.userId, req.query as Record<string, string>);
+
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Orders retrieved successfully!",
+        data: orders.data,
+        meta: orders.meta
+    });
+}
 );
 
 const getCustomerOrders = catchAsync(async (req: Request, res: Response) => {
-        const decodedToken = req.user as JwtPayload;
-        const orders = await OrderServices.getCustomerOrdersService(decodedToken.userId, req.query as Record<string, string>);
-        
-        sendResponse(res, {
-            statusCode: 200,
-            success: true,
-            message: "Orders retrieved successfully!",
-            data: orders.data,
-            meta: orders.meta
-        });
-    }
+    const decodedToken = req.user as JwtPayload;
+    const orders = await OrderServices.getCustomerOrdersService(decodedToken.userId, req.query as Record<string, string>);
+
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Orders retrieved successfully!",
+        data: orders.data,
+        meta: orders.meta
+    });
+}
 );
 
 const getSingleOrder = catchAsync(async (req: Request, res: Response) => {
-        const decodedToken = req.user as JwtPayload;
-        const orderId = req.params.orderId;
-        const order = await OrderServices.getOrderByIdService(decodedToken, orderId);
-        sendResponse(res, {
-            statusCode: 200,
-            success: true,
-            message: "Order retrieved successfully!",
-            data: order,
-        });
-    }
+    const decodedToken = req.user as JwtPayload;
+    const orderId = req.params.orderId;
+    const order = await OrderServices.getOrderByIdService(decodedToken, orderId);
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Order retrieved successfully!",
+        data: order,
+    });
+}
 );
 
 const getAllOrders = catchAsync(async (req: Request, res: Response) => {
-        const orders = await OrderServices.getAllOrdersService(req.query as Record<string, string>);
+    const orders = await OrderServices.getAllOrdersService(req.query as Record<string, string>);
 
-        sendResponse(res, {
-            statusCode: 200,
-            success: true,
-            message: "Orders retrieved successfully!",
-            data: orders.data,
-            meta: orders.meta,
-        });
-    }
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Orders retrieved successfully!",
+        data: orders.data,
+        meta: orders.meta,
+    });
+}
 );
 
 const updateOrderStatus = catchAsync(async (req: Request, res: Response) => {
-        const updatedOrder = await OrderServices.updateOrderStatusService(req.params.orderId, req.body);
-        
-        sendResponse(res, {
-            statusCode: 200,
-            success: true,
-            message: "Order Status Updated Successfully!",
-            data: updatedOrder,
-        });
-    }
+    const decodedToken = req.user as JwtPayload;
+    const orderId = req.params.orderId;
+    const { status } = req.body;
+    const updatedOrder = await OrderServices.updateOrderStatusService(decodedToken, orderId, { status });
+
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Order Status Updated Successfully!",
+        data: updatedOrder,
+    });
+}
 );
 
 
