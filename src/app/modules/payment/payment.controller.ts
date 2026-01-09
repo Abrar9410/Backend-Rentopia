@@ -14,9 +14,9 @@ const initPayment = catchAsync(async (req: Request, res: Response) => {
     const result = await PaymentServices.initPaymentService(orderId, decodedToken.userId);
 
     sendResponse(res, {
-        statusCode: 201,
+        statusCode: 200,
         success: true,
-        message: "Payment done successfully",
+        message: "Payment initiated successfully!",
         data: result,
     });
 });
