@@ -30,6 +30,10 @@ const editRentopiaItem = catchAsync(async (req: Request, res: Response) => {
         images: (req.files as Express.Multer.File[]).map(file => file.path),
     };
 
+    if (payload.images.length < 1) {
+        delete payload.images;
+    };
+
     const updatedItem = await ItemServices.editRentopiaItemService(itemId, decodedToken, payload);
 
     sendResponse(res, {
@@ -46,6 +50,10 @@ const editItem = catchAsync(async (req: Request, res: Response) => {
     const payload = {
         ...req.body,
         images: (req.files as Express.Multer.File[]).map(file => file.path),
+    };
+
+    if (payload.images.length < 1) {
+        delete payload.images;
     };
 
     const updatedItem = await ItemServices.editItemService(itemId, decodedToken.userId, payload);
