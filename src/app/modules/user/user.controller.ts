@@ -48,6 +48,11 @@ const updateUser = catchAsync(async (req: Request, res: Response, next: NextFunc
         ...req.body,
         picture: req.file?.path
     };
+
+    if (!payload.picture) {
+        delete payload.picture;
+    };
+
     const updatedUser = await UserServices.updateUserService(userId, payload, verifiedToken as JwtPayload);
 
     sendResponse(res, {
