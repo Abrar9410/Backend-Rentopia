@@ -203,4 +203,4 @@ npm start
 ---
 
 
-[Live Link](https://backend-rentopia.up.railway.app)
+[Live Link](https://backend-rentopia.onrender.com)
